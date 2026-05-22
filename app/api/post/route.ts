@@ -3,6 +3,7 @@ import { createPostSchema} from "@/prisma/validation/schemaValidation";
 import prisma from "@/prisma/client";
 import { NextResponse } from "next/server";
 
+// create a post
 export async function POST(request: NextRequest) {
   const { title, content } = await request.json();
   const validatedData = createPostSchema.safeParse({ title, content });
@@ -22,5 +23,6 @@ export async function POST(request: NextRequest) {
     status: 201,
   });
 }
+
 
 
