@@ -173,15 +173,15 @@ const features = [
 ];
 
 const statusStyles: Record<TaskStatus, string> = {
-  pending: "border-zinc-700 bg-zinc-900 text-zinc-300",
-  "in-progress": "border-cyan-400/30 bg-cyan-400/10 text-cyan-200",
-  completed: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200",
+  pending: "border-border bg-muted text-muted-foreground",
+  "in-progress": "border-accent/30 bg-accent/10 text-accent",
+  completed: "border-chart-2/30 bg-chart-2/10 text-chart-2",
 };
 
 const priorityStyles: Record<PreviewTask["priority"], string> = {
-  low: "text-zinc-400",
-  medium: "text-amber-200",
-  high: "text-rose-200",
+  low: "text-muted-foreground",
+  medium: "text-chart-3",
+  high: "text-chart-4",
 };
 
 export function LandingPanel() {
@@ -194,33 +194,33 @@ export function LandingPanel() {
   );
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-50">
+    <main className="min-h-screen bg-background text-foreground">
       <section className="relative isolate overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.10),transparent_34%),linear-gradient(135deg,#09090b_0%,#111827_48%,#0f172a_100%)]" />
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:44px_44px] opacity-35" />
+        <div className="app-surface-gradient absolute inset-0 -z-10" />
+        <div className="app-grid-overlay absolute inset-0 -z-10 opacity-35" />
 
         <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
-          <header className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur md:px-5">
+          <header className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card/40 px-4 py-3 backdrop-blur md:px-5">
             <Link
               href="/"
-              className="inline-flex items-center gap-3 rounded-full focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-cyan-300/35"
+              className="inline-flex items-center gap-3 rounded-full focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/35"
               aria-label="Lazylet home">
-              <span className="flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-lg font-bold text-white">
+              <span className="flex size-10 items-center justify-center rounded-2xl border border-border bg-muted text-lg font-bold text-foreground">
                 L
               </span>
-              <span className="text-lg font-semibold tracking-tight text-white">
+              <span className="text-lg font-semibold tracking-tight text-foreground">
                 Lazylet
               </span>
             </Link>
 
-            <nav className="hidden items-center gap-5 text-sm text-zinc-400 md:flex">
-              <a className="transition hover:text-white" href="#features">
+            <nav className="hidden items-center gap-5 text-sm text-muted-foreground md:flex">
+              <a className="transition hover:text-foreground" href="#features">
                 Features
               </a>
-              <a className="transition hover:text-white" href="#preview">
+              <a className="transition hover:text-foreground" href="#preview">
                 Preview
               </a>
-              <a className="transition hover:text-white" href="#workflow">
+              <a className="transition hover:text-foreground" href="#workflow">
                 Workflow
               </a>
             </nav>
@@ -230,13 +230,13 @@ export function LandingPanel() {
                 asChild
                 variant="ghost"
                 size="lg"
-                className="hidden h-10 rounded-xl px-4 text-zinc-300 hover:bg-white/10 hover:text-white sm:inline-flex">
+                className="hidden h-10 rounded-xl px-4 text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-flex">
                 <Link href="/login">Log in</Link>
               </Button>
               <Button
                 asChild
                 size="lg"
-                className="h-10 rounded-xl bg-white px-4 text-zinc-950 hover:bg-zinc-200">
+                className="h-10 rounded-xl bg-primary px-4 text-primary-foreground hover:bg-primary/90">
                 <Link href="/create-account">Get started</Link>
               </Button>
             </div>
@@ -244,13 +244,13 @@ export function LandingPanel() {
 
           <div className="grid flex-1 items-center gap-10 py-12 lg:grid-cols-[0.9fr_1.1fr] lg:py-16 xl:gap-14">
             <div className="max-w-2xl">
-              <p className="inline-flex rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.28em] text-cyan-100">
+              <p className="inline-flex rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.28em] text-accent">
                 Clean task planning
               </p>
-              <h1 className="mt-5 text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
+              <h1 className="mt-5 text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
                 Organize your day without the noise.
               </h1>
-              <p className="mt-5 max-w-xl text-base leading-7 text-zinc-300 sm:text-lg">
+              <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
                 Lazylet brings tasks, projects, and deadlines into one focused
                 dashboard with a calm dark interface that keeps the next step
                 obvious.
@@ -260,25 +260,25 @@ export function LandingPanel() {
                 <Button
                   asChild
                   size="lg"
-                  className="h-12 rounded-xl bg-white px-6 text-base font-semibold text-zinc-950 hover:bg-zinc-200">
+                  className="h-12 rounded-xl bg-primary px-6 text-base font-semibold text-primary-foreground hover:bg-primary/90">
                   <Link href="/create-account">Start organizing</Link>
                 </Button>
                 <Button
                   asChild
                   variant="outline"
                   size="lg"
-                  className="h-12 rounded-xl border-white/15 bg-white/[0.03] px-6 text-base text-white hover:bg-white/10">
+                  className="h-12 rounded-xl border-border bg-card/40 px-6 text-base text-foreground hover:bg-muted">
                   <Link href="/login">View workspace</Link>
                 </Button>
               </div>
 
               <div
                 id="features"
-                className="mt-8 grid gap-3 text-sm text-zinc-300 sm:grid-cols-2">
+                className="mt-8 grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
                 {features.map((feature) => (
                   <div
                     key={feature}
-                    className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                    className="rounded-2xl border border-border bg-card/40 px-4 py-3">
                     {feature}
                   </div>
                 ))}
@@ -288,26 +288,26 @@ export function LandingPanel() {
             <section
               id="preview"
               aria-label="Interactive workspace preview"
-              className="rounded-[2rem] border border-white/10 bg-zinc-900/70 p-3 shadow-2xl shadow-black/40 backdrop-blur-xl sm:p-4">
-              <div className="rounded-[1.5rem] border border-white/10 bg-zinc-950/80 p-4 sm:p-6">
+              className="rounded-[2rem] border border-border bg-card/70 p-3 shadow-2xl backdrop-blur-xl sm:p-4">
+              <div className="rounded-[1.5rem] border border-border bg-background/80 p-4 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="text-sm font-medium text-cyan-100">
+                    <p className="text-sm font-medium text-accent">
                       {activeView.eyebrow}
                     </p>
-                    <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
+                    <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
                       {activeView.heading}
                     </h2>
-                    <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
                       {activeView.summary}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-right">
-                    <p className="text-3xl font-semibold text-white">
+                  <div className="rounded-2xl border border-border bg-card/40 px-4 py-3 text-right">
+                    <p className="text-3xl font-semibold text-foreground">
                       {activeView.completion}%
                     </p>
-                    <p className="text-xs text-zinc-400">weekly progress</p>
+                    <p className="text-xs text-muted-foreground">weekly progress</p>
                   </div>
                 </div>
 
@@ -324,8 +324,8 @@ export function LandingPanel() {
                       aria-pressed={activeViewId === view.id}
                       className={
                         activeViewId === view.id
-                          ? "h-10 rounded-xl border-white/20 bg-white text-zinc-950 hover:bg-zinc-200"
-                          : "h-10 rounded-xl border-white/10 bg-white/[0.03] text-zinc-300 hover:bg-white/10 hover:text-white"
+                          ? "h-10 rounded-xl border-primary bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "h-10 rounded-xl border-border bg-card/40 text-muted-foreground hover:bg-muted hover:text-foreground"
                       }
                       onClick={() => setActiveViewId(view.id)}>
                       {view.label}
@@ -337,18 +337,18 @@ export function LandingPanel() {
                   {activeView.stats.map((stat) => (
                     <div
                       key={stat.label}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                      <p className="text-2xl font-semibold text-white">
+                      className="rounded-2xl border border-border bg-card/40 p-4">
+                      <p className="text-2xl font-semibold text-foreground">
                         {stat.value}
                       </p>
-                      <p className="mt-1 text-xs text-zinc-400">{stat.label}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{stat.label}</p>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-6 overflow-hidden rounded-full bg-white/10">
+                <div className="mt-6 overflow-hidden rounded-full bg-muted">
                   <div
-                    className="h-2 rounded-full bg-cyan-200 transition-all duration-500"
+                    className="h-2 rounded-full bg-accent transition-all duration-500"
                     style={{ width: `${activeView.completion}%` }}
                   />
                 </div>
@@ -357,7 +357,7 @@ export function LandingPanel() {
                   {activeView.tasks.map((task) => (
                     <article
                       key={task.id}
-                      className="rounded-2xl border border-white/10 bg-zinc-900/80 p-4 transition hover:border-white/20 hover:bg-zinc-900">
+                      className="rounded-2xl border border-border bg-card/80 p-4 transition hover:border-ring/40 hover:bg-card">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
@@ -370,14 +370,14 @@ export function LandingPanel() {
                               {task.priority} priority
                             </span>
                           </div>
-                          <h3 className="mt-3 text-base font-semibold text-white">
+                          <h3 className="mt-3 text-base font-semibold text-foreground">
                             {task.title}
                           </h3>
-                          <p className="mt-1 text-sm leading-6 text-zinc-400">
+                          <p className="mt-1 text-sm leading-6 text-muted-foreground">
                             {task.description}
                           </p>
                         </div>
-                        <time className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-zinc-300">
+                        <time className="rounded-xl border border-border bg-card/40 px-3 py-2 text-sm text-muted-foreground">
                           {task.dueTime}
                         </time>
                       </div>
@@ -386,7 +386,7 @@ export function LandingPanel() {
                         {task.tags.map((tag) => (
                           <span
                             key={`${task.id}-${tag}`}
-                            className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-zinc-300">
+                            className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
                             {tag}
                           </span>
                         ))}
@@ -398,14 +398,14 @@ export function LandingPanel() {
             </section>
           </div>
 
-          <footer className="grid gap-3 border-t border-white/10 py-6 text-sm text-zinc-500 sm:grid-cols-3">
+          <footer className="grid gap-3 border-t border-border py-6 text-sm text-muted-foreground sm:grid-cols-3">
             <p>
               Built for fast capture, focused planning, and clear follow-up.
             </p>
             <p className="sm:text-center">Tasks • Projects • Calendar</p>
             <Link
               href="/login"
-              className="font-medium text-zinc-300 transition hover:text-white sm:text-right">
+              className="font-medium text-foreground transition hover:text-accent sm:text-right">
               Continue to app
             </Link>
           </footer>
