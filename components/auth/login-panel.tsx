@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { CheckBtn } from "../checkModal";
 
 const loginHighlights = [
   "Daily focus planning",
@@ -11,6 +12,7 @@ const loginHighlights = [
   "Deadline reminders",
 ];
 
+//Google Icon
 function GoogleIcon() {
   return (
     <svg
@@ -25,8 +27,9 @@ function GoogleIcon() {
   );
 }
 
+// login panel
 export function LoginPanel() {
-  const [email, setEmail] = useState("");
+  const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,8 +39,8 @@ export function LoginPanel() {
     event.preventDefault();
     setStatusMessage("");
 
-    if (!email.trim() || !password.trim()) {
-      setStatusMessage("Please enter both email and password.");
+    if (!emailOrUsername.trim() || !password.trim()) {
+      setStatusMessage("Please enter your email or username and password.");
       return;
     }
 
@@ -45,7 +48,7 @@ export function LoginPanel() {
       setIsSubmitting(true);
       await new Promise((resolve) => setTimeout(resolve, 700));
       setStatusMessage(
-        `Signed in as ${email}${remember ? " (remembered)" : ""}.`,
+        `Signed in as ${emailOrUsername}${remember ? " (remembered)" : ""}.`,
       );
     } finally {
       setIsSubmitting(false);
@@ -90,8 +93,8 @@ export function LoginPanel() {
                 Step back into your focused workspace.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
-                Pick up your tasks, priorities, and deadlines with the same clean
-                dark workspace from the landing page.
+                Pick up your tasks, priorities, and deadlines with the same
+                clean dark workspace from the landing page.
               </p>
 
               <div className="mt-8 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
@@ -115,7 +118,9 @@ export function LoginPanel() {
                     </p>
                   </div>
                   <div className="rounded-2xl border border-border bg-card/40 px-4 py-3 text-right">
-                    <p className="text-2xl font-semibold text-foreground">72%</p>
+                    <p className="text-2xl font-semibold text-foreground">
+                      72%
+                    </p>
                     <p className="text-xs text-muted-foreground">progress</p>
                   </div>
                 </div>
@@ -136,111 +141,112 @@ export function LoginPanel() {
                   <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
                     Log in to Lazylet
                   </h2>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    No backend is connected yet, so this screen is ready for your
-                    future auth flow.
-                  </p>
                 </div>
 
                 <div className="mt-8 space-y-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
                     className="h-12 w-full justify-center gap-3 rounded-xl border-border bg-card/40 text-foreground hover:bg-muted">
-                <GoogleIcon />
-                Continue with Google
-              </Button>
+                    <GoogleIcon />
+                    Continue with Google
+                  </Button>
 
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span className="h-px flex-1 bg-border" />
-                or continue with email
+                    or continue with email
                     <span className="h-px flex-1 bg-border" />
                   </div>
-              </div>
-
-            {/* Frontend-only form for now; wire these controls to auth when the backend is ready. */}
-            <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
-              <div className="space-y-2">
-                <label
-                  htmlFor="email"
-                    className="text-sm font-medium text-foreground">
-                  Email address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                    className="h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between gap-4">
-                  <label
-                    htmlFor="password"
-                      className="text-sm font-medium text-foreground">
-                    Password
-                  </label>
-                  <Link
-                    href="#"
-                      className="text-sm font-medium text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25">
-                    Forgot password?
-                  </Link>
                 </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                    className="h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
-                />
-              </div>
 
-              <div className="flex items-center justify-between gap-4">
-                <label
-                  htmlFor="remember"
-                    className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <input
-                    id="remember"
-                    name="remember"
-                    type="checkbox"
-                    checked={remember}
-                    onChange={(event) => setRemember(event.target.checked)}
-                      className="size-4 rounded border-input bg-card/40 accent-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
-                  />
-                  Remember me
-                </label>
-              </div>
+                {/* Frontend-only form for now; wire these controls to auth when the backend is ready. */}
+                <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="emailOrUsername"
+                      className="text-sm font-medium text-foreground">
+                      Email or Username
+                    </label>
+                    <input
+                      id="emailOrUsername"
+                      name="emailOrUsername"
+                      type="text"
+                      autoComplete="email or username"
+                      placeholder="Enter your email or username"
+                      value={emailOrUsername}
+                      onChange={(event) =>
+                        setEmailOrUsername(event.target.value)
+                      }
+                      className="h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
+                    />
+                  </div>
 
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                size="lg"
-                  className="h-12 w-full rounded-xl bg-primary text-base font-bold tracking-tight text-primary-foreground hover:bg-primary/90 sm:text-lg">
-                {isSubmitting ? "Logging in..." : "Log in"}
-              </Button>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-4">
+                      <label
+                        htmlFor="password"
+                        className="text-sm font-medium text-foreground">
+                        Password
+                      </label>
+                      <Link
+                        href="#"
+                        className="text-sm font-medium text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25">
+                        Forgot password?
+                      </Link>
+                    </div>
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      autoComplete="current-password"
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      className="h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
+                    />
+                  </div>
 
-              {statusMessage ? (
-                  <p className="text-sm text-muted-foreground">{statusMessage}</p>
-              ) : null}
-            </form>
+                  <div className="flex items-center justify-between gap-4">
+                    <label
+                      htmlFor="remember"
+                      className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <input
+                        id="remember"
+                        name="remember"
+                        type="checkbox"
+                        checked={remember}
+                        onChange={(event) => setRemember(event.target.checked)}
+                        className="size-4 rounded border-input bg-card/40 accent-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
+                      />
+                      Remember me
+                    </label>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    size="lg"
+                    className="h-12 w-full rounded-xl bg-primary text-base font-bold tracking-tight text-primary-foreground hover:bg-primary/90 sm:text-lg">
+                    {isSubmitting ? "Logging in..." : "Log in"}
+                  </Button>
+                  <CheckBtn />
+
+                  {statusMessage ? (
+                    <p className="text-sm text-muted-foreground text-center text-red-500 fade-in-out">
+                      {statusMessage}
+                    </p>
+                  ) : null}
+                </form>
 
                 <p className="mt-8 text-center text-sm text-muted-foreground">
-              New to Lazylet?{" "}
-              <Link
-                href="/create-account"
+                  New to Lazylet?{" "}
+                  <Link
+                    href="/create-account"
                     className="font-medium text-foreground underline-offset-4 transition hover:text-accent hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25">
-                Create account
-              </Link>
-            </p>
+                    Create account
+                  </Link>
+                </p>
               </div>
             </div>
           </div>

@@ -1,52 +1,116 @@
-import { z } from "zod";
+import { z, ZodError } from "zod";
 
-// Task schema validation using Zod
-export const createTaskSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  priority: z.enum(["Low", "Medium", "High"], {
-    message: "Priority must be one of: Low, Medium, High",
+import { validationRules } from "./validationRules";
+import { namePattern, emailPattern, usernamePattern } from "./validationRules";
+
+type EnumValues = readonly [string, ...string[]];
+type TextRule = {
+  label: string;
+  minLength?: number;
+  pattern?: RegExp;
+  patternMessage?: string;
+};
+
+function formatList(values: readonly string[]) {
+  return values.join(", ");
+}
+function nameValidation(label: string) {
+  return z.string().trim().regex(namePattern, `Invalid ${label.toLowerCase()}. Only letters are allowed.`);
+}
+
+
+// required text
+function requiredText(rule: TextRule) {
+  const minLength = rule.minLength ?? 1;
+  const message =
+    minLength === 1
+      ? `${rule.label} is required`
+      : `${rule.label} must be at least ${minLength} characters long`;
+
+  let schema = z.string().trim().min(minLength, message);
+
+  if (rule.pattern) {
+    schema = schema.regex(
+      rule.pattern,
+      rule.patternMessage ?? `${rule.label} has invalid characters`,
+    );
+  }
+
+  return schema;
+}
+
+// optional text
+function optionalText() {
+  return z.string().trim().optional();
+}
+//email field
+function emailField(rule: TextRule) {
+  return z.string().trim().regex(emailPattern, `Invalid ${rule.label.toLowerCase()}`);
+}
+
+
+function enumField(label: string, values: EnumValues) {
+  return z.enum(values, {
+    message: `${label} must be one of: ${formatList(values)}`,
+  });
+}
+
+export function getFirstValidationMessage(error: ZodError) {
+  return error.issues[0]?.message ?? "Invalid request data.";
+}
+
+const taskFields = {
+  title: requiredText(validationRules.task.title),
+  description: requiredText(validationRules.task.description),
+  priority: enumField(
+    validationRules.task.priority.label,
+    validationRules.task.priority.values,
+  ),
+  status: enumField(
+    validationRules.task.status.label,
+    validationRules.task.status.values,
+  ),
+  pinned: z.boolean().optional(),
+};
+
+const postFields = {
+  title: requiredText(validationRules.post.title),
+  content: requiredText(validationRules.post.content),
+  pinned: z.boolean().optional(),
+};
+
+const accountFields = {
+  firstName: nameValidation(validationRules.user.firstName.label),
+  middleName: optionalText(),
+  lastName: nameValidation(validationRules.user.lastName.label),
+  username: requiredText({
+    label: validationRules.user.username.label,
+    minLength: validationRules.user.username.minLength,
+    pattern: usernamePattern,
+    patternMessage: validationRules.user.username.patternMessage,
   }),
-  status: z.enum(["To Do", "In Progress", "Done"], {
-    message: "Status must be one of: To Do, In Progress, Done",
+  email: emailField({
+    label: validationRules.user.email.label,
+    pattern: emailPattern,
   }),
-  pinned: z.boolean().optional(),
-});
+  password: requiredText({
+    label: validationRules.user.password.label,
+    minLength: validationRules.user.password.minLength,
+  }),
+};
 
-export const updateTaskSchema = z.object({
-  title: z.string().min(1, "Title is required").optional(),
-  description: z.string().min(1, "Description is required").optional(),
-    priority: z.enum(["Low", "Medium", "High"], {
-    message: "Priority must be one of: Low, Medium, High",
-  }).optional(),
-  status: z.enum(["To Do", "In Progress", "Done"], {    
-    message: "Status must be one of: To Do, In Progress, Done",
-  }).optional(),
-  pinned: z.boolean().optional(),
-});
+// Schemas are composed from shared rules so field constraints stay in one place.
+export const createTaskSchema = z.object(taskFields);
+export const updateTaskSchema = z.object(taskFields).partial();
 
-export const createPostSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  content: z.string().min(1, "Content is required"),
-  pinned: z.boolean().optional(),
-});
+export const createPostSchema = z.object(postFields);
+export const updatePostSchema = z.object(postFields).partial();
 
-export const updatePostSchema = z.object({
-  title: z.string().min(1, "Title is required").optional(),
-  content: z.string().min(1, "Content is required").optional(),
-  pinned: z.boolean().optional(),
-});
-
-export const userSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters long"),
-});
+export const userSchema = z.object(accountFields);
 
 export const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(8, "Password must be at least 8 characters long"),
+  email: emailField(validationRules.user.email),
+  password: requiredText(validationRules.user.password),
 });
+
+

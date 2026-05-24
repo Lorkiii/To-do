@@ -14,19 +14,23 @@ const signupHighlights = [
 export function CreateAccountPanel() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatusMessage("");
+    setIsSuccess(false);
 
     if (
       !firstName.trim() ||
       !lastName.trim() ||
+      !username.trim() ||
       !email.trim() ||
       !password.trim()
     ) {
@@ -41,10 +45,37 @@ export function CreateAccountPanel() {
 
     try {
       setIsSubmitting(true);
-      await new Promise((resolve) => setTimeout(resolve, 700));
+      const response = await fetch("/api/create-account", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          username,
+          email,
+          password,
+        }),
+      });
+
+      const result = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        setStatusMessage(result.error ?? "Unable to create account.");
+        return;
+      }
+
+      setIsSuccess(true);
       setStatusMessage(`Account created for ${firstName} ${lastName}.`);
+      setFirstName("");
+      setLastName("");
+      setUsername("");
+      setEmail("");
       setPassword("");
       setConfirmPassword("");
+    } catch {
+      setStatusMessage("Unable to connect to the server. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -190,6 +221,24 @@ export function CreateAccountPanel() {
 
                   <div className="space-y-2">
                     <label
+                      htmlFor="username"
+                      className="text-sm font-medium text-foreground">
+                      Username
+                    </label>
+                    <input
+                      id="username"
+                      name="username"
+                      type="text"
+                      autoComplete="username"
+                      placeholder="juan2026"
+                      value={username}
+                      onChange={(event) => setUsername(event.target.value)}
+                      className="h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
                       htmlFor="email"
                       className="text-sm font-medium text-foreground">
                       Email address
@@ -253,7 +302,10 @@ export function CreateAccountPanel() {
                   </Button>
 
                   {statusMessage ? (
-                    <p className="text-sm text-muted-foreground">
+                    <p
+                      className={`text-sm ${
+                        isSuccess ? "text-accent" : "text-muted-foreground"
+                      }`}>
                       {statusMessage}
                     </p>
                   ) : null}
