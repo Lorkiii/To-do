@@ -15,7 +15,11 @@ function formatList(values: readonly string[]) {
   return values.join(", ");
 }
 function nameValidation(label: string) {
-  return z.string().trim().regex(namePattern, `Invalid ${label.toLowerCase()}. Only letters are allowed.`);
+  return z
+    .string()
+    .trim()
+    .min(1, `${label} is required`)
+    .regex(namePattern, `Invalid ${label.toLowerCase()}. Only letters are allowed.`);
 }
 
 
@@ -45,7 +49,11 @@ function optionalText() {
 }
 //email field
 function emailField(rule: TextRule) {
-  return z.string().trim().regex(emailPattern, `Invalid ${rule.label.toLowerCase()}`);
+  return z
+    .string()
+    .trim()
+    .min(1, `${rule.label} is required`)
+    .regex(emailPattern, `Invalid ${rule.label.toLowerCase()}`);
 }
 
 
@@ -57,6 +65,16 @@ function enumField(label: string, values: EnumValues) {
 
 export function getFirstValidationMessage(error: ZodError) {
   return error.issues[0]?.message ?? "Invalid request data.";
+}
+
+export function validateField<T>(schema: z.ZodType<T>, value: unknown) {
+  const result = schema.safeParse(value);
+
+  if (result.success) {
+    return "";
+  }
+
+  return getFirstValidationMessage(result.error);
 }
 
 const taskFields = {
@@ -79,7 +97,7 @@ const postFields = {
   pinned: z.boolean().optional(),
 };
 
-const accountFields = {
+export const accountFieldSchemas = {
   firstName: nameValidation(validationRules.user.firstName.label),
   middleName: optionalText(),
   lastName: nameValidation(validationRules.user.lastName.label),
@@ -99,6 +117,47 @@ const accountFields = {
   }),
 };
 
+export const loginIdentifierSchema = z
+  .string()
+  .trim()
+  .min(1, "Email or username is required")
+  .superRefine((value, context) => {
+    if (!value) {
+      return;
+    }
+
+    if (value.includes("@")) {
+      if (!emailPattern.test(value)) {
+        context.addIssue({
+          code: "custom",
+          message: "Invalid email address",
+        });
+      }
+
+      return;
+    }
+
+    if (value.length < validationRules.user.username.minLength) {
+      context.addIssue({
+        code: "custom",
+        message: `${validationRules.user.username.label} must be at least ${validationRules.user.username.minLength} characters long`,
+      });
+      return;
+    }
+
+    if (!usernamePattern.test(value)) {
+      context.addIssue({
+        code: "custom",
+        message: validationRules.user.username.patternMessage,
+      });
+    }
+  });
+
+export const loginFieldSchemas = {
+  emailOrUsername: loginIdentifierSchema,
+  password: requiredText(validationRules.user.password),
+};
+
 // Schemas are composed from shared rules so field constraints stay in one place.
 export const createTaskSchema = z.object(taskFields);
 export const updateTaskSchema = z.object(taskFields).partial();
@@ -106,11 +165,7 @@ export const updateTaskSchema = z.object(taskFields).partial();
 export const createPostSchema = z.object(postFields);
 export const updatePostSchema = z.object(postFields).partial();
 
-export const userSchema = z.object(accountFields);
+export const userSchema = z.object(accountFieldSchemas);
 
-export const loginSchema = z.object({
-  email: emailField(validationRules.user.email),
-  password: requiredText(validationRules.user.password),
-});
-
+export const loginSchema = z.object(loginFieldSchemas);
 

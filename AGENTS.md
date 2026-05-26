@@ -21,3 +21,21 @@ Before finishing code changes:
 
 - Use camelCase for variables, functions, object properties, service functions, schema values, and helper names.
 - Keep framework-required casing unchanged, such as PascalCase React components and types, uppercase environment variables, Prisma model names, and existing file or route segment conventions.
+
+### Folder structure
+
+-The project should have a reusable dashboard layout, shared UI components, feature-based components, hooks, services, types, and utility folders.
+
+Do not focus on exact file names. Instead, show the folder pattern and explain the purpose of each folder so I know where to put reusable dashboard UI, task components, modals, API logic, hooks, and types.
+
+Make it clean, beginner-friendly, and easy to maintain as the app grows.
+
+
+- app folder
+- components/ui
+- components/layout
+- components/features
+- hooks
+- services
+- lib
+- types

@@ -4,6 +4,11 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  accountFieldSchemas,
+  userSchema,
+  validateField,
+} from "@/prisma/validation/schemaValidation";
 
 const signupHighlights = [
   "Create task lists fast",
@@ -11,35 +16,124 @@ const signupHighlights = [
   "Plan deadlines clearly",
 ];
 
+const accountFieldNames = [
+  "firstName",
+  "lastName",
+  "username",
+  "email",
+  "password",
+] as const;
+
+type AccountFieldName = (typeof accountFieldNames)[number];
+type AccountFormValues = Record<AccountFieldName, string>;
+type AccountFieldErrors = Record<AccountFieldName, string>;
+
+const emptyAccountFormValues: AccountFormValues = {
+  firstName: "",
+  lastName: "",
+  username: "",
+  email: "",
+  password: "",
+};
+
+const emptyAccountFieldErrors: AccountFieldErrors = {
+  firstName: "",
+  lastName: "",
+  username: "",
+  email: "",
+  password: "",
+};
+
+function getInputClassName(error: string) {
+  return `h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25 ${
+    error
+      ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/20"
+      : ""
+  }`;
+}
+
+function getConfirmPasswordError(password: string, confirmPassword: string) {
+  if (!confirmPassword.trim()) {
+    return "Confirm password is required";
+  }
+
+  if (password !== confirmPassword) {
+    return "Passwords do not match";
+  }
+
+  return "";
+}
+
 export function CreateAccountPanel() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formValues, setFormValues] = useState(emptyAccountFormValues);
+  const [fieldErrors, setFieldErrors] = useState(emptyAccountFieldErrors);
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+
+  function validateAccountForm(values: AccountFormValues) {
+    const result = userSchema.safeParse(values);
+    const nextErrors = { ...emptyAccountFieldErrors };
+
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        const fieldName = issue.path[0] as AccountFieldName | undefined;
+
+        if (fieldName && accountFieldNames.includes(fieldName)) {
+          nextErrors[fieldName] ||= issue.message;
+        }
+      }
+    }
+
+    return nextErrors;
+  }
+
+  function handleFieldChange(fieldName: AccountFieldName, value: string) {
+    const nextValues = { ...formValues, [fieldName]: value };
+
+    setFormValues(nextValues);
+    setFieldErrors((currentErrors) => ({
+      ...currentErrors,
+      [fieldName]: validateField(accountFieldSchemas[fieldName], value),
+    }));
+    setStatusMessage("");
+    setIsSuccess(false);
+
+    if (fieldName === "password" && confirmPassword) {
+      setConfirmPasswordError(
+        getConfirmPasswordError(value, confirmPassword),
+      );
+    }
+  }
+
+  function handleConfirmPasswordChange(value: string) {
+    setConfirmPassword(value);
+    setConfirmPasswordError(getConfirmPasswordError(formValues.password, value));
+    setStatusMessage("");
+    setIsSuccess(false);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatusMessage("");
     setIsSuccess(false);
 
-    if (
-      !firstName.trim() ||
-      !lastName.trim() ||
-      !username.trim() ||
-      !email.trim() ||
-      !password.trim()
-    ) {
-      setStatusMessage("Please complete all required fields.");
-      return;
-    }
+    const nextFieldErrors = validateAccountForm(formValues);
+    const nextConfirmPasswordError = getConfirmPasswordError(
+      formValues.password,
+      confirmPassword,
+    );
 
-    if (password !== confirmPassword) {
-      setStatusMessage("Passwords do not match.");
+    setFieldErrors(nextFieldErrors);
+    setConfirmPasswordError(nextConfirmPasswordError);
+
+    if (
+      Object.values(nextFieldErrors).some(Boolean) ||
+      nextConfirmPasswordError
+    ) {
+      setStatusMessage("Please fix the highlighted fields.");
       return;
     }
 
@@ -51,11 +145,11 @@ export function CreateAccountPanel() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          firstName,
-          lastName,
-          username,
-          email,
-          password,
+          firstName: formValues.firstName,
+          lastName: formValues.lastName,
+          username: formValues.username,
+          email: formValues.email,
+          password: formValues.password,
         }),
       });
 
@@ -67,13 +161,13 @@ export function CreateAccountPanel() {
       }
 
       setIsSuccess(true);
-      setStatusMessage(`Account created for ${firstName} ${lastName}.`);
-      setFirstName("");
-      setLastName("");
-      setUsername("");
-      setEmail("");
-      setPassword("");
+      setStatusMessage(
+        `Account created for ${formValues.firstName} ${formValues.lastName}.`,
+      );
+      setFormValues(emptyAccountFormValues);
+      setFieldErrors(emptyAccountFieldErrors);
       setConfirmPassword("");
+      setConfirmPasswordError("");
     } catch {
       setStatusMessage("Unable to connect to the server. Please try again.");
     } finally {
@@ -190,19 +284,32 @@ export function CreateAccountPanel() {
                         First name
                       </label>
                       <input
-                        id="name"
-                        name="name"
+                        id="first-name"
+                        name="first-name"
                         type="text"
-                        autoComplete="name"
+                        autoComplete="given-name"
                         placeholder="Juan Dela Cruz"
-                        value={firstName}
-                        onChange={(event) => setFirstName(event.target.value)}
-                        className="h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
+                        value={formValues.firstName}
+                        onChange={(event) =>
+                          handleFieldChange("firstName", event.target.value)
+                        }
+                        {...(fieldErrors.firstName ? { "aria-invalid": "true" as const } : {})}
+                        aria-describedby={
+                          fieldErrors.firstName ? "first-name-error" : undefined
+                        }
+                        className={getInputClassName(fieldErrors.firstName)}
                       />
+                      {fieldErrors.firstName ? (
+                        <p
+                          id="first-name-error"
+                          className="text-xs font-medium text-red-500">
+                          {fieldErrors.firstName}
+                        </p>
+                      ) : null}
                     </div>
                     <div className="space-y-2">
                       <label
-                        htmlFor="name"
+                        htmlFor="last-name"
                         className="text-sm font-medium text-foreground">
                         Last name
                       </label>
@@ -212,10 +319,23 @@ export function CreateAccountPanel() {
                         type="text"
                         autoComplete="last-name"
                         placeholder="Dela Cruz"
-                        value={lastName}
-                        onChange={(event) => setLastName(event.target.value)}
-                        className="h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
+                        value={formValues.lastName}
+                        onChange={(event) =>
+                          handleFieldChange("lastName", event.target.value)
+                        }
+                        {...(fieldErrors.lastName ? { "aria-invalid": "true" as const } : {})}
+                        aria-describedby={
+                          fieldErrors.lastName ? "last-name-error" : undefined
+                        }
+                        className={getInputClassName(fieldErrors.lastName)}
                       />
+                      {fieldErrors.lastName ? (
+                        <p
+                          id="last-name-error"
+                          className="text-xs font-medium text-red-500">
+                          {fieldErrors.lastName}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
 
@@ -231,10 +351,23 @@ export function CreateAccountPanel() {
                       type="text"
                       autoComplete="username"
                       placeholder="juan2026"
-                      value={username}
-                      onChange={(event) => setUsername(event.target.value)}
-                      className="h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
+                      value={formValues.username}
+                      onChange={(event) =>
+                        handleFieldChange("username", event.target.value)
+                      }
+                      {...(fieldErrors.username ? { "aria-invalid": "true" as const } : {})}
+                      aria-describedby={
+                        fieldErrors.username ? "username-error" : undefined
+                      }
+                      className={getInputClassName(fieldErrors.username)}
                     />
+                    {fieldErrors.username ? (
+                      <p
+                        id="username-error"
+                        className="text-xs font-medium text-red-500">
+                        {fieldErrors.username}
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="space-y-2">
@@ -249,10 +382,23 @@ export function CreateAccountPanel() {
                       type="email"
                       autoComplete="email"
                       placeholder="you@example.com"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      className="h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
+                      value={formValues.email}
+                      onChange={(event) =>
+                        handleFieldChange("email", event.target.value)
+                      }
+                      {...(fieldErrors.email ? { "aria-invalid": "true" as const } : {})}
+                      aria-describedby={
+                        fieldErrors.email ? "email-error" : undefined
+                      }
+                      className={getInputClassName(fieldErrors.email)}
                     />
+                    {fieldErrors.email ? (
+                      <p
+                        id="email-error"
+                        className="text-xs font-medium text-red-500">
+                        {fieldErrors.email}
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="space-y-2">
@@ -267,10 +413,23 @@ export function CreateAccountPanel() {
                       type="password"
                       autoComplete="new-password"
                       placeholder="Create a password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      className="h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
+                      value={formValues.password}
+                      onChange={(event) =>
+                        handleFieldChange("password", event.target.value)
+                      }
+                      {...(fieldErrors.password ? { "aria-invalid": "true" as const } : {})}
+                      aria-describedby={
+                        fieldErrors.password ? "password-error" : undefined
+                      }
+                      className={getInputClassName(fieldErrors.password)}
                     />
+                    {fieldErrors.password ? (
+                      <p
+                        id="password-error"
+                        className="text-xs font-medium text-red-500">
+                        {fieldErrors.password}
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="space-y-2">
@@ -287,10 +446,23 @@ export function CreateAccountPanel() {
                       placeholder="Re-enter your password"
                       value={confirmPassword}
                       onChange={(event) =>
-                        setConfirmPassword(event.target.value)
+                        handleConfirmPasswordChange(event.target.value)
                       }
-                      className="h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
+                      {...(confirmPasswordError ? { "aria-invalid": "true" as const } : {})}
+                      aria-describedby={
+                        confirmPasswordError
+                          ? "confirm-password-error"
+                          : undefined
+                      }
+                      className={getInputClassName(confirmPasswordError)}
                     />
+                    {confirmPasswordError ? (
+                      <p
+                        id="confirm-password-error"
+                        className="text-xs font-medium text-red-500">
+                        {confirmPasswordError}
+                      </p>
+                    ) : null}
                   </div>
 
                   <Button

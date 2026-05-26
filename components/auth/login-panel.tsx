@@ -4,6 +4,11 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  loginFieldSchemas,
+  loginSchema,
+  validateField,
+} from "@/prisma/validation/schemaValidation";
 import { CheckBtn } from "../checkModal";
 
 const loginHighlights = [
@@ -11,6 +16,24 @@ const loginHighlights = [
   "Project-aware tasks",
   "Deadline reminders",
 ];
+
+type LoginFieldErrors = {
+  emailOrUsername: string;
+  password: string;
+};
+
+const emptyLoginFieldErrors: LoginFieldErrors = {
+  emailOrUsername: "",
+  password: "",
+};
+
+function getInputClassName(error: string) {
+  return `h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25 ${
+    error
+      ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/20"
+      : ""
+  }`;
+}
 
 //Google Icon
 function GoogleIcon() {
@@ -31,25 +54,88 @@ function GoogleIcon() {
 export function LoginPanel() {
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [fieldErrors, setFieldErrors] = useState(emptyLoginFieldErrors);
   const [remember, setRemember] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+
+  function validateLoginForm() {
+    const result = loginSchema.safeParse({ emailOrUsername, password });
+    const nextErrors = { ...emptyLoginFieldErrors };
+
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        const fieldName = issue.path[0] as keyof LoginFieldErrors | undefined;
+
+        if (fieldName && fieldName in nextErrors) {
+          nextErrors[fieldName] ||= issue.message;
+        }
+      }
+    }
+
+    return nextErrors;
+  }
+
+  function handleEmailOrUsernameChange(value: string) {
+    setEmailOrUsername(value);
+    setFieldErrors((currentErrors) => ({
+      ...currentErrors,
+      emailOrUsername: validateField(loginFieldSchemas.emailOrUsername, value),
+    }));
+    setStatusMessage("");
+  }
+
+  function handlePasswordChange(value: string) {
+    setPassword(value);
+    setFieldErrors((currentErrors) => ({
+      ...currentErrors,
+      password: validateField(loginFieldSchemas.password, value),
+    }));
+    setStatusMessage("");
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatusMessage("");
 
-    if (!emailOrUsername.trim() || !password.trim()) {
-      setStatusMessage("Please enter your email or username and password.");
+    const nextFieldErrors = validateLoginForm();
+    setFieldErrors(nextFieldErrors);
+
+    if (Object.values(nextFieldErrors).some(Boolean)) {
+      setStatusMessage("Please fix the highlighted fields.");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      await new Promise((resolve) => setTimeout(resolve, 700));
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          emailOrUsername,
+          password,
+        }),
+      });
+
+      const result = (await response.json()) as {
+        error?: string;
+        user?: { email: string; username: string; name: string | null };
+      };
+
+      if (!response.ok) {
+        setStatusMessage(result.error ?? "Unable to log in.");
+        return;
+      }
+
       setStatusMessage(
-        `Signed in as ${emailOrUsername}${remember ? " (remembered)" : ""}.`,
+        `Signed in as ${result.user?.username ?? emailOrUsername}${
+          remember ? " (remembered)" : ""
+        }.`,
       );
+    } catch {
+      setStatusMessage("Unable to connect to the server. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -172,14 +258,27 @@ export function LoginPanel() {
                       id="emailOrUsername"
                       name="emailOrUsername"
                       type="text"
-                      autoComplete="email or username"
+                      autoComplete="username"
                       placeholder="Enter your email or username"
                       value={emailOrUsername}
                       onChange={(event) =>
-                        setEmailOrUsername(event.target.value)
+                        handleEmailOrUsernameChange(event.target.value)
                       }
-                      className="h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
+                      {...(fieldErrors.emailOrUsername ? { "aria-invalid": "true" as const } : {})}
+                      aria-describedby={
+                        fieldErrors.emailOrUsername
+                          ? "email-or-username-error"
+                          : undefined
+                      }
+                      className={getInputClassName(fieldErrors.emailOrUsername)}
                     />
+                    {fieldErrors.emailOrUsername ? (
+                      <p
+                        id="email-or-username-error"
+                        className="text-xs font-medium text-red-500">
+                        {fieldErrors.emailOrUsername}
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="space-y-2">
@@ -202,9 +301,24 @@ export function LoginPanel() {
                       autoComplete="current-password"
                       placeholder="Enter your password"
                       value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      className="h-12 w-full rounded-xl border border-input bg-card/40 px-4 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
+                      onChange={(event) =>
+                        handlePasswordChange(event.target.value)
+                      }
+                      {...(fieldErrors.password ? { "aria-invalid": "true" as const } : {})}
+                      aria-describedby={
+                        fieldErrors.password
+                          ? "login-password-error"
+                          : undefined
+                      }
+                      className={getInputClassName(fieldErrors.password)}
                     />
+                    {fieldErrors.password ? (
+                      <p
+                        id="login-password-error"
+                        className="text-xs font-medium text-red-500">
+                        {fieldErrors.password}
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="flex items-center justify-between gap-4">

@@ -1,0 +1,344 @@
+import prisma from "@/prisma/client";
+import type {
+  DashboardActivityDay,
+  DashboardActivityItem,
+  DashboardStat,
+  DashboardTaskPreview,
+  DashboardViewModel,
+} from "@/types/dashboard";
+
+type SourceTask = {
+  id: string;
+  title: string;
+  description: string;
+  priority: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  dueDate?: Date;
+};
+
+type SourcePost = {
+  id: string;
+  title: string;
+  content: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+const heatmapDays = 84;
+
+function daysAgo(days: number) {
+  const date = new Date();
+  date.setHours(12, 0, 0, 0);
+  date.setDate(date.getDate() - days);
+  return date;
+}
+
+const mockTasks: SourceTask[] = [
+  {
+    id: "task-dashboard",
+    title: "Design dashboard overview",
+    description: "Prepare the first dynamic dashboard screen.",
+    priority: "High",
+    status: "In Progress",
+    createdAt: daysAgo(0),
+    updatedAt: daysAgo(0),
+    dueDate: daysAgo(1),
+  },
+  {
+    id: "task-api-contract",
+    title: "Draft task API contract",
+    description: "List request and response shapes for the task module.",
+    priority: "Medium",
+    status: "To Do",
+    createdAt: daysAgo(1),
+    updatedAt: daysAgo(1),
+    dueDate: daysAgo(3),
+  },
+  {
+    id: "task-validation",
+    title: "Review validation rules",
+    description: "Keep task fields aligned with the shared Zod schemas.",
+    priority: "Medium",
+    status: "Done",
+    createdAt: daysAgo(2),
+    updatedAt: daysAgo(1),
+    dueDate: daysAgo(0),
+  },
+  {
+    id: "task-mobile-nav",
+    title: "Polish mobile navigation",
+    description: "Check the bottom nav spacing on smaller screens.",
+    priority: "Low",
+    status: "Done",
+    createdAt: daysAgo(5),
+    updatedAt: daysAgo(4),
+    dueDate: daysAgo(2),
+  },
+];
+
+const mockPosts: SourcePost[] = [
+  {
+    id: "post-weekly-focus",
+    title: "Weekly focus notes",
+    content: "A short reflection on planned task momentum.",
+    createdAt: daysAgo(0),
+    updatedAt: daysAgo(0),
+  },
+  {
+    id: "post-dashboard-thinking",
+    title: "Dashboard thinking",
+    content: "Ideas for making productivity visible without clutter.",
+    createdAt: daysAgo(3),
+    updatedAt: daysAgo(2),
+  },
+];
+
+function toDateKey(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function formatDayLabel(date: Date) {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+  }).format(date);
+}
+
+function formatTimeLabel(date: Date) {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function getActivityLevel(count: number): DashboardActivityDay["level"] {
+  if (count === 0) {
+    return 0;
+  }
+
+  if (count === 1) {
+    return 1;
+  }
+
+  if (count === 2) {
+    return 2;
+  }
+
+  if (count <= 4) {
+    return 3;
+  }
+
+  return 4;
+}
+
+function getCompletionRate(tasks: SourceTask[]) {
+  if (tasks.length === 0) {
+    return 0;
+  }
+
+  const completed = tasks.filter((task) => isCompletedStatus(task.status)).length;
+  return Math.round((completed / tasks.length) * 100);
+}
+
+function isCompletedStatus(status: string) {
+  const normalizedStatus = status.trim().toLowerCase();
+  return normalizedStatus === "done" || normalizedStatus === "completed";
+}
+
+function isInProgressStatus(status: string) {
+  return status.trim().toLowerCase() === "in progress";
+}
+
+function isTaskOverdue(task: SourceTask, now: Date) {
+  if (!task.dueDate || isCompletedStatus(task.status)) {
+    return false;
+  }
+
+  return task.dueDate.getTime() < now.getTime();
+}
+
+function getStats(tasks: SourceTask[], now: Date): DashboardStat[] {
+  const completed = tasks.filter((task) => isCompletedStatus(task.status)).length;
+  const inProgress = tasks.filter((task) => isInProgressStatus(task.status)).length;
+
+  return [
+    {
+      id: "totalTasks",
+      label: "Total Tasks",
+      value: tasks.length,
+      helper: "All active task records",
+      tone: "accent",
+    },
+    {
+      id: "inProgress",
+      label: "In Progress",
+      value: inProgress,
+      helper: "Tasks currently moving",
+      tone: "warning",
+    },
+    {
+      id: "completed",
+      label: "Completed",
+      value: completed,
+      helper: "Finished tasks",
+      tone: "success",
+    },
+    {
+      id: "overdue",
+      label: "Overdue",
+      value: tasks.filter((task) => isTaskOverdue(task, now)).length,
+      helper: "Waiting on a due date field",
+      tone: "danger",
+    },
+  ];
+}
+
+function getActivityDays(tasks: SourceTask[], posts: SourcePost[]) {
+  const countsByDay = new Map<string, number>();
+
+  // Bucket task and post timestamps into day keys so Prisma rows can replace mock data without changing the UI.
+  for (const task of tasks) {
+    for (const date of [task.createdAt, task.updatedAt]) {
+      const dateKey = toDateKey(date);
+      countsByDay.set(dateKey, (countsByDay.get(dateKey) ?? 0) + 1);
+    }
+  }
+
+  for (const post of posts) {
+    for (const date of [post.createdAt, post.updatedAt]) {
+      const dateKey = toDateKey(date);
+      countsByDay.set(dateKey, (countsByDay.get(dateKey) ?? 0) + 1);
+    }
+  }
+
+  return Array.from({ length: heatmapDays }, (_, index) => {
+    const date = daysAgo(heatmapDays - 1 - index);
+    const dateKey = toDateKey(date);
+    const count = countsByDay.get(dateKey) ?? 0;
+
+    return {
+      date: dateKey,
+      count,
+      level: getActivityLevel(count),
+    };
+  });
+}
+
+function getPreviewTasks(tasks: SourceTask[], now: Date): DashboardTaskPreview[] {
+  return tasks
+    .slice()
+    .sort((firstTask, secondTask) => {
+      return secondTask.updatedAt.getTime() - firstTask.updatedAt.getTime();
+    })
+    .slice(0, 4)
+    .map((task) => ({
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      priority: task.priority,
+      status: task.status,
+      dueLabel: task.dueDate ? formatDayLabel(task.dueDate) : "No due date",
+      isOverdue: isTaskOverdue(task, now),
+      updatedAt: formatTimeLabel(task.updatedAt),
+    }));
+}
+
+function getRecentActivities(
+  tasks: SourceTask[],
+  posts: SourcePost[],
+): DashboardActivityItem[] {
+  const taskActivities = tasks.map((task) => ({
+    id: `task-${task.id}`,
+    title: task.title,
+    description: `Task ${task.status.toLowerCase()}`,
+    type: "task" as const,
+    timestamp: task.updatedAt,
+  }));
+
+  const postActivities = posts.map((post) => ({
+    id: `post-${post.id}`,
+    title: post.title,
+    description: post.content ?? "Blog post activity",
+    type: "post" as const,
+    timestamp: post.updatedAt,
+  }));
+
+  return [...taskActivities, ...postActivities]
+    .sort((firstItem, secondItem) => {
+      return secondItem.timestamp.getTime() - firstItem.timestamp.getTime();
+    })
+    .slice(0, 5)
+    .map((item) => ({
+      ...item,
+      timestamp: formatTimeLabel(item.timestamp),
+    }));
+}
+
+function buildDashboardViewModel(
+  tasks: SourceTask[],
+  posts: SourcePost[],
+): DashboardViewModel {
+  const now = new Date();
+  const activityDays = getActivityDays(tasks, posts);
+  const activeDays = activityDays.filter((day) => day.count > 0).length;
+  const weeklyActivityCount = activityDays
+    .slice(-7)
+    .reduce((total, day) => total + day.count, 0);
+
+  return {
+    userName: "Lazylet",
+    generatedAt: formatTimeLabel(now),
+    summary: {
+      completionRate: getCompletionRate(tasks),
+      activeDays,
+      weeklyActivityCount,
+    },
+    stats: getStats(tasks, now),
+    activityDays,
+    upcomingTasks: getPreviewTasks(tasks, now),
+    recentActivities: getRecentActivities(tasks, posts),
+  };
+}
+
+export async function getDashboardViewModel(): Promise<DashboardViewModel> {
+  try {
+    const [tasks, posts] = await Promise.all([
+      prisma.task.findMany({
+        where: { deletedAt: null },
+        orderBy: { updatedAt: "desc" },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          priority: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      prisma.post.findMany({
+        where: { deletedAt: null },
+        orderBy: { updatedAt: "desc" },
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+    ]);
+
+    if (tasks.length === 0 && posts.length === 0) {
+      return buildDashboardViewModel(mockTasks, mockPosts);
+    }
+
+    return buildDashboardViewModel(tasks, posts);
+  } catch {
+    return buildDashboardViewModel(mockTasks, mockPosts);
+  }
+}

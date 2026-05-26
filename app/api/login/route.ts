@@ -18,8 +18,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const { emailOrUsername, password } = validatedData.data;
   const user = await prisma.user.findUnique({
-    where: { email: validatedData.data.email },
+    where: emailOrUsername.includes("@")
+      ? { email: emailOrUsername }
+      : { username: emailOrUsername },
     select: {
       id: true,
       email: true,
@@ -31,19 +34,19 @@ export async function POST(request: NextRequest) {
 
   if (!user) {
     return NextResponse.json(
-      { error: "Invalid email or password." },
+      { error: "Invalid email, username, or password." },
       { status: 401 },
     );
   }
 
   const passwordMatches = await bcrypt.compare(
-    validatedData.data.password,
+    password,
     user.passwordHash,
   );
 
   if (!passwordMatches) {
     return NextResponse.json(
-      { error: "Invalid email or password." },
+      { error: "Invalid email, username, or password." },
       { status: 401 },
     );
   }
