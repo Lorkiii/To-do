@@ -8,7 +8,17 @@ import {
 } from "@/prisma/validation/schemaValidation";
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid JSON request body." },
+      { status: 400 },
+    );
+  }
+
   const validatedData = loginSchema.safeParse(body);
 
   if (!validatedData.success) {
@@ -17,46 +27,59 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
+// get the email or username and password from the validated data
+  const emailOrUsername = validatedData.data.emailOrUsername.trim().toLowerCase();
+  const password = validatedData.data.password;
 
-  const { emailOrUsername, password } = validatedData.data;
-  const user = await prisma.user.findUnique({
-    where: emailOrUsername.includes("@")
-      ? { email: emailOrUsername }
-      : { username: emailOrUsername },
-    select: {
-      id: true,
-      email: true,
-      username: true,
-      name: true,
-      passwordHash: true,
-    },
-  });
+  try {
+    // find the user by email or username
+    const user = await prisma.user.findUnique({
+      where: emailOrUsername.includes("@")
+        ? { email: emailOrUsername }
+        : { username: emailOrUsername },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        name: true,
+        passwordHash: true,
+      },
+    });
 
-  if (!user) {
+    if (!user) {
+      return NextResponse.json(
+        { error: "Invalid email, username, or password." },
+        { status: 401 },
+      );
+    }
+
+    const passwordMatches = await bcrypt.compare(
+      password,
+      user.passwordHash,
+    );
+
+    if (!passwordMatches) {
+      return NextResponse.json(
+        { error: "Invalid email, username, or password." },
+        { status: 401 },
+      );
+    }
+
+    return NextResponse.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        name: user.name,
+      },
+      message: "Login successful.",
+      route: "/dashboard",
+    });
+
+  } catch {
     return NextResponse.json(
-      { error: "Invalid email, username, or password." },
-      { status: 401 },
+      { error: "Unable to log in right now." },
+      { status: 500 },
     );
   }
-
-  const passwordMatches = await bcrypt.compare(
-    password,
-    user.passwordHash,
-  );
-
-  if (!passwordMatches) {
-    return NextResponse.json(
-      { error: "Invalid email, username, or password." },
-      { status: 401 },
-    );
-  }
-
-  return NextResponse.json({
-    user: {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      name: user.name,
-    },
-  });
 }

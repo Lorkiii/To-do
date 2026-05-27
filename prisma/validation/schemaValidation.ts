@@ -16,7 +16,7 @@ function formatList(values: readonly string[]) {
 }
 function nameValidation(label: string) {
   return z
-    .string()
+    .string({ error: `${label} is required` })
     .trim()
     .min(1, `${label} is required`)
     .regex(namePattern, `Invalid ${label.toLowerCase()}. Only letters are allowed.`);
@@ -31,7 +31,7 @@ function requiredText(rule: TextRule) {
       ? `${rule.label} is required`
       : `${rule.label} must be at least ${minLength} characters long`;
 
-  let schema = z.string().trim().min(minLength, message);
+  let schema = z.string({ error: message }).trim().min(minLength, message);
 
   if (rule.pattern) {
     schema = schema.regex(
@@ -50,7 +50,7 @@ function optionalText() {
 //email field
 function emailField(rule: TextRule) {
   return z
-    .string()
+    .string({ error: `${rule.label} is required` })
     .trim()
     .min(1, `${rule.label} is required`)
     .regex(emailPattern, `Invalid ${rule.label.toLowerCase()}`);
@@ -118,7 +118,7 @@ export const accountFieldSchemas = {
 };
 
 export const loginIdentifierSchema = z
-  .string()
+  .string({ error: "Email or username is required" })
   .trim()
   .min(1, "Email or username is required")
   .superRefine((value, context) => {
@@ -168,4 +168,3 @@ export const updatePostSchema = z.object(postFields).partial();
 export const userSchema = z.object(accountFieldSchemas);
 
 export const loginSchema = z.object(loginFieldSchemas);
-

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +12,7 @@ import {
   validateField,
 } from "@/prisma/validation/schemaValidation";
 import { CheckBtn } from "../checkModal";
+
 
 const loginHighlights = [
   "Daily focus planning",
@@ -50,8 +53,18 @@ function GoogleIcon() {
   );
 }
 
+
 // login panel
 export function LoginPanel() {
+
+  // router is used to redirect the user to the dashboard page
+  const router = useRouter(); 
+  // emailOrUsername is used to store the email or username of the user
+  // password is used to store the password of the user
+  // fieldErrors is used to store the errors of the form
+  // remember is used to store the remember me checkbox
+  // isSubmitting is used to store the submitting state of the form
+  // statusMessage is used to store the status message of the form
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState(emptyLoginFieldErrors);
@@ -108,32 +121,18 @@ export function LoginPanel() {
 
     try {
       setIsSubmitting(true);
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          emailOrUsername,
-          password,
-        }),
+      const result = await signIn("credentials", {
+        emailOrUsername,
+        password,
+        redirect: false,
       });
 
-      const result = (await response.json()) as {
-        error?: string;
-        user?: { email: string; username: string; name: string | null };
-      };
-
-      if (!response.ok) {
-        setStatusMessage(result.error ?? "Unable to log in.");
+      if (result && "error" in result) {
+        setStatusMessage(result.error as string);
         return;
       }
-
-      setStatusMessage(
-        `Signed in as ${result.user?.username ?? emailOrUsername}${
-          remember ? " (remembered)" : ""
-        }.`,
-      );
+      router.push("/dashboard");
+      router.refresh();
     } catch {
       setStatusMessage("Unable to connect to the server. Please try again.");
     } finally {
@@ -264,7 +263,9 @@ export function LoginPanel() {
                       onChange={(event) =>
                         handleEmailOrUsernameChange(event.target.value)
                       }
-                      {...(fieldErrors.emailOrUsername ? { "aria-invalid": "true" as const } : {})}
+                      {...(fieldErrors.emailOrUsername
+                        ? { "aria-invalid": "true" as const }
+                        : {})}
                       aria-describedby={
                         fieldErrors.emailOrUsername
                           ? "email-or-username-error"
@@ -304,7 +305,9 @@ export function LoginPanel() {
                       onChange={(event) =>
                         handlePasswordChange(event.target.value)
                       }
-                      {...(fieldErrors.password ? { "aria-invalid": "true" as const } : {})}
+                      {...(fieldErrors.password
+                        ? { "aria-invalid": "true" as const }
+                        : {})}
                       aria-describedby={
                         fieldErrors.password
                           ? "login-password-error"
