@@ -9,7 +9,16 @@ import {
 } from "@/prisma/validation/schemaValidation";
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: 400 },
+    );
+  }
+
   const validatedData = userSchema.safeParse(body);
 
   if (!validatedData.success) {
@@ -20,13 +29,16 @@ export async function POST(request: NextRequest) {
   }
 
   const { firstName, lastName, username, email, password } = validatedData.data;
-  const passwordHash = await bcrypt.hash(password, 12);
+  const normalizedUsername = username.trim().toLowerCase();
+  const normalizedEmail = email.trim().toLowerCase();
 
   try {
+    const passwordHash = await bcrypt.hash(password, 12);
+
     const user = await prisma.user.create({
       data: {
-        email,
-        username,
+        email: normalizedEmail,
+        username: normalizedUsername,
         name: `${firstName} ${lastName}`,
         passwordHash,
       },

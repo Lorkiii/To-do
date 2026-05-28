@@ -2,8 +2,7 @@ export const taskPriorities = ["Low", "Medium", "High"] as const;
 export const taskStatuses = ["To Do", "In Progress", "Done"] as const;
 export const usernamePattern = /^[a-zA-Z0-9_]+$/;
 export const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const namePattern = /^[a-zA-Z]+$/;
-
+export const namePattern = /^[a-zA-Z]+(?: [a-zA-Z]+)*$/;
 
 export const validationRules = {
   task: {
@@ -30,4 +29,3 @@ export const validationRules = {
     password: { label: "Password", minLength: 6 },
   },
 } as const;
-

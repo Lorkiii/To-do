@@ -288,7 +288,7 @@ export function CreateAccountPanel() {
                         name="first-name"
                         type="text"
                         autoComplete="given-name"
-                        placeholder="Juan Dela Cruz"
+                        placeholder=""
                         value={formValues.firstName}
                         onChange={(event) =>
                           handleFieldChange("firstName", event.target.value)
@@ -318,7 +318,7 @@ export function CreateAccountPanel() {
                         name="last-name"
                         type="text"
                         autoComplete="last-name"
-                        placeholder="Dela Cruz"
+                        placeholder=""
                         value={formValues.lastName}
                         onChange={(event) =>
                           handleFieldChange("lastName", event.target.value)
@@ -350,7 +350,7 @@ export function CreateAccountPanel() {
                       name="username"
                       type="text"
                       autoComplete="username"
-                      placeholder="juan2026"
+                      placeholder=""
                       value={formValues.username}
                       onChange={(event) =>
                         handleFieldChange("username", event.target.value)
@@ -381,7 +381,7 @@ export function CreateAccountPanel() {
                       name="email"
                       type="email"
                       autoComplete="email"
-                      placeholder="you@example.com"
+                      placeholder=""
                       value={formValues.email}
                       onChange={(event) =>
                         handleFieldChange("email", event.target.value)
@@ -412,7 +412,7 @@ export function CreateAccountPanel() {
                       name="password"
                       type="password"
                       autoComplete="new-password"
-                      placeholder="Create a password"
+                      placeholder=""
                       value={formValues.password}
                       onChange={(event) =>
                         handleFieldChange("password", event.target.value)
@@ -443,7 +443,7 @@ export function CreateAccountPanel() {
                       name="confirm-password"
                       type="password"
                       autoComplete="new-password"
-                      placeholder="Re-enter your password"
+                      placeholder=""
                       value={confirmPassword}
                       onChange={(event) =>
                         handleConfirmPasswordChange(event.target.value)
