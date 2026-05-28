@@ -13,7 +13,6 @@ import {
 } from "@/prisma/validation/schemaValidation";
 import { CheckBtn } from "../checkModal";
 
-
 const loginHighlights = [
   "Daily focus planning",
   "Project-aware tasks",
@@ -53,12 +52,10 @@ function GoogleIcon() {
   );
 }
 
-
 // login panel
 export function LoginPanel() {
-
   // router is used to redirect the user to the dashboard page
-  const router = useRouter(); 
+  const router = useRouter();
   // emailOrUsername is used to store the email or username of the user
   // password is used to store the password of the user
   // fieldErrors is used to store the errors of the form
@@ -125,14 +122,17 @@ export function LoginPanel() {
         emailOrUsername,
         password,
         redirect: false,
+        callbackUrl: "/dashboard",
       });
 
-      if (result && "error" in result) {
-        setStatusMessage(result.error as string);
+      if (result?.error) {
+        setStatusMessage(result.error);
         return;
       }
-      router.push("/dashboard");
-      router.refresh();
+      if (result?.ok) {
+        router.replace("/dashboard");
+        router.refresh();
+      }
     } catch {
       setStatusMessage("Unable to connect to the server. Please try again.");
     } finally {

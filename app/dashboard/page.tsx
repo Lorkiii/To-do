@@ -8,10 +8,18 @@ import { DashboardStatCards } from "@/components/features/dashboard/statCards";
 import { DashboardSidebar } from "@/components/layout/dashboardSidebar";
 import { Button } from "@/components/ui/button";
 import { getDashboardViewModel } from "@/services/dashboardService";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+  console.log("DASHBOARD SESSION:", session);
+  if (!session) {
+    redirect("/login");
+  }
   const dashboard = await getDashboardViewModel();
 
   return (

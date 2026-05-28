@@ -1,5 +1,10 @@
 import bcrypt from "bcrypt";
-import type { NextAuthOptions, Session, User } from "next-auth";
+import {
+  getServerSession,
+  type NextAuthOptions,
+  type Session,
+  type User,
+} from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { JWT } from "next-auth/jwt";
 import prisma from "@/prisma/client";
@@ -7,13 +12,14 @@ import {
   getFirstValidationMessage,
   loginSchema,
 } from "@/prisma/validation/schemaValidation";
-import NextAuth from "next-auth";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const authOptions: NextAuthOptions = {
   //   jwt strategy is used to create a token that is used to authenticate the user
   session: {
     strategy: "jwt",
   },
+  secret: process.env.NEXTAUTH_SECRET,
+
   providers: [  // credentials provider is used to authenticate the user with email and password
     CredentialsProvider({
       credentials: { emailOrUsername: { label: "Email or Username", type: "text" }, password: { label: "Password", type: "password" }, },
@@ -63,6 +69,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  pages: {
+    signIn: "/login",
+  },
   callbacks: {
     async jwt({ token, user }: { token: JWT; user?: User }) {
       if (user) {
@@ -85,4 +94,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
-});
+};
+
+export function auth() {
+  return getServerSession(authOptions);
+}
