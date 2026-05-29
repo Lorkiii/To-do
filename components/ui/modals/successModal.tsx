@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import {
   Dialog,
@@ -15,13 +17,21 @@ import { HiCheckCircle } from "react-icons/hi";
 type SuccessModalProps = {
   title: string;
   description: string;
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
-const SuccessModal = ({ title, description, trigger }: SuccessModalProps) => {
+const SuccessModal = ({
+  title,
+  description,
+  trigger,
+  open,
+  onOpenChange,
+}: SuccessModalProps) => {
   return (
-    <Dialog>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
       <DialogContent>
         <DialogHeader>
           <div className="relative mx-auto my-4 flex size-20 items-center justify-center">

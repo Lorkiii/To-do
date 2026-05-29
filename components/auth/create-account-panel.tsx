@@ -9,6 +9,7 @@ import {
   userSchema,
   validateField,
 } from "@/prisma/validation/schemaValidation";
+import SuccessModal from "@/components/ui/modals/successModal";
 
 const signupHighlights = [
   "Create task lists fast",
@@ -71,7 +72,8 @@ export function CreateAccountPanel() {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   function validateAccountForm(values: AccountFormValues) {
     const result = userSchema.safeParse(values);
@@ -99,7 +101,7 @@ export function CreateAccountPanel() {
       [fieldName]: validateField(accountFieldSchemas[fieldName], value),
     }));
     setStatusMessage("");
-    setIsSuccess(false);
+    setIsSuccessModalOpen(false);
 
     if (fieldName === "password" && confirmPassword) {
       setConfirmPasswordError(
@@ -112,13 +114,13 @@ export function CreateAccountPanel() {
     setConfirmPassword(value);
     setConfirmPasswordError(getConfirmPasswordError(formValues.password, value));
     setStatusMessage("");
-    setIsSuccess(false);
+    setIsSuccessModalOpen(false);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatusMessage("");
-    setIsSuccess(false);
+    setIsSuccessModalOpen(false);
 
     const nextFieldErrors = validateAccountForm(formValues);
     const nextConfirmPasswordError = getConfirmPasswordError(
@@ -159,11 +161,10 @@ export function CreateAccountPanel() {
         setStatusMessage(result.error ?? "Unable to create account.");
         return;
       }
-
-      setIsSuccess(true);
-      setStatusMessage(
+      setSuccessMessage(
         `Account created for ${formValues.firstName} ${formValues.lastName}.`,
       );
+      setIsSuccessModalOpen(true);
       setFormValues(emptyAccountFormValues);
       setFieldErrors(emptyAccountFieldErrors);
       setConfirmPassword("");
@@ -177,6 +178,12 @@ export function CreateAccountPanel() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
+      <SuccessModal
+        title="Account created"
+        description={successMessage}
+        open={isSuccessModalOpen}
+        onOpenChange={setIsSuccessModalOpen}
+      />
       <section className="relative isolate min-h-screen overflow-hidden">
         <div className="app-surface-gradient absolute inset-0 -z-10" />
         <div className="app-grid-overlay absolute inset-0 -z-10 opacity-35" />
@@ -474,10 +481,7 @@ export function CreateAccountPanel() {
                   </Button>
 
                   {statusMessage ? (
-                    <p
-                      className={`text-sm ${
-                        isSuccess ? "text-accent" : "text-muted-foreground"
-                      }`}>
+                    <p className="text-sm text-muted-foreground">
                       {statusMessage}
                     </p>
                   ) : null}

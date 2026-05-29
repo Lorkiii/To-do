@@ -35,30 +35,30 @@ export function DashboardStatCards({ stats }: { stats: DashboardStat[] }) {
 
   return (
     <section
-      className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+      className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4"
       aria-label="Task statistics">
       {stats.map((stat) => (
         <article
           key={stat.id}
-          className="min-h-32 rounded-xl border border-border bg-card/70 p-4 shadow-sm">
+          className="min-h-[6.5rem] rounded-xl border border-border bg-card/70 p-3 shadow-sm sm:min-h-32 sm:p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-xs font-medium text-muted-foreground sm:text-sm">
                 {stat.label}
               </p>
-              <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
+              <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:mt-3 sm:text-3xl">
                 {stat.value}
               </p>
             </div>
             <span
               className={cn(
-                "flex size-10 shrink-0 items-center justify-center rounded-xl border",
+                "flex size-8 shrink-0 items-center justify-center rounded-lg border sm:size-10 sm:rounded-xl",
                 statToneClassMap[stat.tone],
               )}>
               <HugeiconsIcon icon={statIconMap[stat.id]} strokeWidth={2} />
             </span>
           </div>
-          <p className="mt-4 text-xs leading-5 text-muted-foreground">
+          <p className="mt-3 text-xs leading-5 text-muted-foreground sm:mt-4">
             {stat.helper}
           </p>
         </article>

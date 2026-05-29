@@ -26,9 +26,9 @@ export default async function DashboardPage() {
     <DashboardSidebar activeItemId="dashboard">
       <header className="flex flex-col gap-4 rounded-xl border border-border bg-card/70 p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-accent">Welcome back</p>
+            <p className="text-sm font-medium text-accent">Welcome back {session.user?.name} !</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-            {dashboard.userName} dashboard
+            Dashboard
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Updated {dashboard.generatedAt}
