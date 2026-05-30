@@ -63,6 +63,16 @@ function enumField(label: string, values: EnumValues) {
   });
 }
 
+function optionalDateField(label: string) {
+  return z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || !Number.isNaN(Date.parse(value)), {
+      message: `${label} must be a valid date`,
+    });
+}
+
 export function getFirstValidationMessage(error: ZodError) {
   return error.issues[0]?.message ?? "Invalid request data.";
 }
@@ -88,7 +98,20 @@ const taskFields = {
     validationRules.task.status.label,
     validationRules.task.status.values,
   ),
+  dueDate: optionalDateField("Due date"),
+  checklistItems: z
+    .array(requiredText(validationRules.checklistItem.title))
+    .optional(),
   pinned: z.boolean().optional(),
+};
+
+const taskTemplateFields = {
+  name: requiredText(validationRules.taskTemplate.name),
+  title: taskFields.title,
+  description: taskFields.description,
+  priority: taskFields.priority,
+  status: taskFields.status,
+  checklistItems: taskFields.checklistItems,
 };
 
 const postFields = {
@@ -161,6 +184,8 @@ export const loginFieldSchemas = {
 // Schemas are composed from shared rules so field constraints stay in one place.
 export const createTaskSchema = z.object(taskFields);
 export const updateTaskSchema = z.object(taskFields).partial();
+export const createTaskTemplateSchema = z.object(taskTemplateFields);
+export const updateTaskTemplateSchema = z.object(taskTemplateFields).partial();
 
 export const createPostSchema = z.object(postFields);
 export const updatePostSchema = z.object(postFields).partial();

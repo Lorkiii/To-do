@@ -15,7 +15,7 @@ type SourceTask = {
   status: string;
   createdAt: Date;
   updatedAt: Date;
-  dueDate?: Date;
+  dueDate?: Date | null;
 };
 
 type SourcePost = {
@@ -304,11 +304,16 @@ function buildDashboardViewModel(
   };
 }
 
-export async function getDashboardViewModel(): Promise<DashboardViewModel> {
+export async function getDashboardViewModel(
+  authorId?: string,
+): Promise<DashboardViewModel> {
   try {
     const [tasks, posts] = await Promise.all([
       prisma.task.findMany({
-        where: { deletedAt: null },
+        where: {
+          deletedAt: null,
+          ...(authorId ? { authorId } : {}),
+        },
         orderBy: { updatedAt: "desc" },
         select: {
           id: true,
@@ -316,6 +321,7 @@ export async function getDashboardViewModel(): Promise<DashboardViewModel> {
           description: true,
           priority: true,
           status: true,
+          dueDate: true,
           createdAt: true,
           updatedAt: true,
         },

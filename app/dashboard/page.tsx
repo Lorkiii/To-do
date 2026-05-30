@@ -5,6 +5,7 @@ import {
 } from "@/components/features/dashboard/activityLists";
 import { DashboardProgressSummary } from "@/components/features/dashboard/progressSummary";
 import { DashboardStatCards } from "@/components/features/dashboard/statCards";
+import { AddTaskModal } from "@/components/features/dashboard/addTaskModal";
 import { DashboardSidebar } from "@/components/layout/dashboardSidebar";
 import { Button } from "@/components/ui/button";
 import { getDashboardViewModel } from "@/services/dashboardService";
@@ -16,17 +17,19 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
-  console.log("DASHBOARD SESSION:", session);
+
   if (!session) {
     redirect("/login");
   }
-  const dashboard = await getDashboardViewModel();
+  const dashboard = await getDashboardViewModel(session.user?.id);
 
   return (
     <DashboardSidebar activeItemId="dashboard">
       <header className="flex flex-col gap-4 rounded-xl border border-border bg-card/70 p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <p className="text-sm font-medium text-accent">Welcome back {session.user?.name} !</p>
+          <p className="text-sm font-medium text-accent">
+            Welcome back {session.user?.name}!
+          </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
             Dashboard
           </h1>
@@ -34,12 +37,15 @@ export default async function DashboardPage() {
             Updated {dashboard.generatedAt}
           </p>
         </div>
-        <Button
-          asChild
-          size="lg"
-          className="h-10 rounded-xl bg-primary px-4 text-primary-foreground hover:bg-primary/90">
-          <a href="#tasks">View tasks</a>
-        </Button>
+        <AddTaskModal
+          trigger={
+            <Button
+              size="lg"
+              className="hidden h-10 rounded-xl bg-primary px-4 text-primary-foreground hover:bg-primary/90 md:inline-flex">
+              Add task
+            </Button>
+          }
+        />
       </header>
 
       <div className="mt-5 space-y-5">

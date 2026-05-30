@@ -11,6 +11,12 @@ export const validationRules = {
     priority: { label: "Priority", values: taskPriorities },
     status: { label: "Status", values: taskStatuses },
   },
+  taskTemplate: {
+    name: { label: "Template name", minLength: 1 },
+  },
+  checklistItem: {
+    title: { label: "Checklist item", minLength: 1 },
+  },
   post: {
     title: { label: "Title", minLength: 1 },
     content: { label: "Content", minLength: 1 },
