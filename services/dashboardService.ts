@@ -35,66 +35,6 @@ function daysAgo(days: number) {
   return date;
 }
 
-const mockTasks: SourceTask[] = [
-  {
-    id: "task-dashboard",
-    title: "Design dashboard overview",
-    description: "Prepare the first dynamic dashboard screen.",
-    priority: "High",
-    status: "In Progress",
-    createdAt: daysAgo(0),
-    updatedAt: daysAgo(0),
-    dueDate: daysAgo(1),
-  },
-  {
-    id: "task-api-contract",
-    title: "Draft task API contract",
-    description: "List request and response shapes for the task module.",
-    priority: "Medium",
-    status: "To Do",
-    createdAt: daysAgo(1),
-    updatedAt: daysAgo(1),
-    dueDate: daysAgo(3),
-  },
-  {
-    id: "task-validation",
-    title: "Review validation rules",
-    description: "Keep task fields aligned with the shared Zod schemas.",
-    priority: "Medium",
-    status: "Done",
-    createdAt: daysAgo(2),
-    updatedAt: daysAgo(1),
-    dueDate: daysAgo(0),
-  },
-  {
-    id: "task-mobile-nav",
-    title: "Polish mobile navigation",
-    description: "Check the bottom nav spacing on smaller screens.",
-    priority: "Low",
-    status: "Done",
-    createdAt: daysAgo(5),
-    updatedAt: daysAgo(4),
-    dueDate: daysAgo(2),
-  },
-];
-
-const mockPosts: SourcePost[] = [
-  {
-    id: "post-weekly-focus",
-    title: "Weekly focus notes",
-    content: "A short reflection on planned task momentum.",
-    createdAt: daysAgo(0),
-    updatedAt: daysAgo(0),
-  },
-  {
-    id: "post-dashboard-thinking",
-    title: "Dashboard thinking",
-    content: "Ideas for making productivity visible without clutter.",
-    createdAt: daysAgo(3),
-    updatedAt: daysAgo(2),
-  },
-];
-
 function toDateKey(date: Date) {
   return date.toISOString().slice(0, 10);
 }
@@ -339,12 +279,8 @@ export async function getDashboardViewModel(
       }),
     ]);
 
-    if (tasks.length === 0 && posts.length === 0) {
-      return buildDashboardViewModel(mockTasks, mockPosts);
-    }
-
     return buildDashboardViewModel(tasks, posts);
   } catch {
-    return buildDashboardViewModel(mockTasks, mockPosts);
+    return buildDashboardViewModel([], []);
   }
 }
