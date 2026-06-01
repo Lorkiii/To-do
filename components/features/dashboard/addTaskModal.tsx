@@ -47,6 +47,7 @@ const emptyTaskForm: TaskFormState = {
   dueDate: "",
 };
 
+// Convert unknown errors into display text.
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message;
@@ -55,6 +56,7 @@ function getErrorMessage(error: unknown) {
   return "Something went wrong.";
 }
 
+// Create a temporary checklist row for form editing.
 function createChecklistDraftItem(title = ""): ChecklistDraftItem {
   return {
     id: `${Date.now()}-${Math.random()}`,
@@ -62,10 +64,12 @@ function createChecklistDraftItem(title = ""): ChecklistDraftItem {
   };
 }
 
+// Convert template checklist titles into editable rows.
 function toChecklistDraftItems(items: readonly string[]) {
   return items.map((item) => createChecklistDraftItem(item));
 }
 
+// Prepare clean API data for saving a reusable template.
 function getTemplatePayload(
   form: TaskFormState,
   name: string,
@@ -85,6 +89,7 @@ function getTemplatePayload(
 
 export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
   const router = useRouter();
+  // Local UI state for task creation and template actions.
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<TaskFormState>(emptyTaskForm);
   const [checklistItems, setChecklistItems] = useState<ChecklistDraftItem[]>([]);
@@ -98,6 +103,7 @@ export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
   const [isDeletingTemplate, setIsDeletingTemplate] = useState(false);
   const [isSavingTask, setIsSavingTask] = useState(false);
 
+  // Combine built-in templates with the user's saved templates.
   const templateOptions = useMemo<TaskTemplateOption[]>(
     () => [
       ...builtInTaskTemplates,
@@ -115,10 +121,12 @@ export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
     [savedTemplates],
   );
 
+  // Find the selected template from the combined list.
   const selectedTemplate = templateOptions.find(
     (template) => template.id === selectedTemplateId,
   );
 
+  // Copy template values into the task form.
   const applyTemplate = useCallback((template: TaskTemplateOption) => {
     setForm((currentForm) => ({
       ...currentForm,
@@ -133,6 +141,7 @@ export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
   }, []);
 
   useEffect(() => {
+    // Load saved templates only when the modal opens.
     if (!open) {
       return;
     }
@@ -174,6 +183,7 @@ export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
     };
   }, [open]);
 
+  // Open the modal and optionally apply a card-provided template.
   function handleOpenChange(nextOpen: boolean) {
     setOpen(nextOpen);
 
@@ -183,6 +193,7 @@ export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
     }
   }
 
+  // Keep task fields in sync with inputs.
   function handleFieldChange(
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) {
@@ -194,6 +205,7 @@ export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
     }));
   }
 
+  // Apply the currently selected template.
   function handleApplySelectedTemplate() {
     if (!selectedTemplate) {
       return;
@@ -202,6 +214,7 @@ export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
     applyTemplate(selectedTemplate);
   }
 
+  // Update one checklist draft row.
   function handleChecklistItemChange(itemId: string, title: string) {
     setChecklistItems((currentItems) =>
       currentItems.map((item) =>
@@ -215,6 +228,7 @@ export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
     );
   }
 
+  // Add a blank checklist draft row.
   function handleAddChecklistItem() {
     setChecklistItems((currentItems) => [
       ...currentItems,
@@ -222,12 +236,14 @@ export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
     ]);
   }
 
+  // Remove one checklist draft row.
   function handleRemoveChecklistItem(itemId: string) {
     setChecklistItems((currentItems) =>
       currentItems.filter((item) => item.id !== itemId),
     );
   }
 
+  // Save the current task form as a reusable template.
   async function handleSaveTemplate() {
     setTemplateError("");
     const payload = getTemplatePayload(form, templateName, checklistItems);
@@ -266,6 +282,7 @@ export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
     }
   }
 
+  // Delete the selected saved template.
   async function handleDeleteTemplate() {
     if (!selectedTemplate || selectedTemplate.source !== "saved") {
       return;
@@ -295,6 +312,7 @@ export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
     }
   }
 
+  // Save the final task to the dashboard.
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setTaskError("");

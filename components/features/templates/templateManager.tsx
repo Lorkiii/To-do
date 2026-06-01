@@ -37,6 +37,7 @@ const emptyTemplateForm: TemplateFormState = {
   checklistItems: [],
 };
 
+// Convert unknown errors into display text.
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message;
@@ -45,6 +46,7 @@ function getErrorMessage(error: unknown) {
   return "Something went wrong.";
 }
 
+// Create a temporary checklist row for form editing.
 function createChecklistDraftItem(title = ""): ChecklistDraftItem {
   return {
     id: `${Date.now()}-${Math.random()}`,
@@ -52,10 +54,12 @@ function createChecklistDraftItem(title = ""): ChecklistDraftItem {
   };
 }
 
+// Convert stored checklist titles into editable rows.
 function toChecklistDraftItems(items: readonly string[]) {
   return items.map((item) => createChecklistDraftItem(item));
 }
 
+// Mark saved templates so cards can share one template type.
 function toTemplateOption(template: SavedTaskTemplate): TaskTemplateOption {
   return {
     id: template.id,
@@ -69,6 +73,7 @@ function toTemplateOption(template: SavedTaskTemplate): TaskTemplateOption {
   };
 }
 
+// Prepare clean API data from the form state.
 function getTemplatePayload(form: TemplateFormState) {
   return {
     name: form.name.trim(),
@@ -83,6 +88,7 @@ function getTemplatePayload(form: TemplateFormState) {
 }
 
 export function TemplateManager() {
+  // Local UI state for loading, editing, saving, and deleting templates.
   const [savedTemplates, setSavedTemplates] = useState<SavedTaskTemplate[]>([]);
   const [form, setForm] = useState<TemplateFormState>(emptyTemplateForm);
   const [error, setError] = useState("");
@@ -93,6 +99,7 @@ export function TemplateManager() {
   const isEditing = form.id.length > 0;
 
   useEffect(() => {
+    // Load saved templates when the templates page mounts.
     let ignore = false;
 
     async function loadTemplates() {
@@ -130,6 +137,7 @@ export function TemplateManager() {
     };
   }, []);
 
+  // Keep basic form fields in sync with inputs.
   function handleFieldChange(
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) {
@@ -141,6 +149,7 @@ export function TemplateManager() {
     }));
   }
 
+  // Update one checklist draft row.
   function handleChecklistItemChange(itemId: string, title: string) {
     setForm((currentForm) => ({
       ...currentForm,
@@ -155,6 +164,7 @@ export function TemplateManager() {
     }));
   }
 
+  // Add a blank checklist draft row.
   function handleAddChecklistItem() {
     setForm((currentForm) => ({
       ...currentForm,
@@ -165,6 +175,7 @@ export function TemplateManager() {
     }));
   }
 
+  // Remove one checklist draft row.
   function handleRemoveChecklistItem(itemId: string) {
     setForm((currentForm) => ({
       ...currentForm,
@@ -174,11 +185,13 @@ export function TemplateManager() {
     }));
   }
 
+  // Reset the editor for a new custom template.
   function handleCreateNew() {
     setForm(emptyTemplateForm);
     setError("");
   }
 
+  // Copy a built-in template into the editable form.
   function handleCustomizeBuiltInTemplate(template: TaskTemplateOption) {
     setForm({
       id: "",
@@ -192,6 +205,7 @@ export function TemplateManager() {
     setError("");
   }
 
+  // Load a saved template into edit mode.
   function handleEditTemplate(template: SavedTaskTemplate) {
     setForm({
       id: template.id,
@@ -205,6 +219,7 @@ export function TemplateManager() {
     setError("");
   }
 
+  // Create or update a saved template through the API.
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -250,6 +265,7 @@ export function TemplateManager() {
     }
   }
 
+  // Delete a saved template and remove it from the page.
   async function handleDeleteTemplate(templateId: string) {
     setError("");
     setDeletingTemplateId(templateId);
@@ -490,6 +506,7 @@ export function TemplateManager() {
   );
 }
 
+// Shared card for built-in and saved templates.
 function TemplateCard({
   template,
   isDeleting = false,

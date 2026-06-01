@@ -15,6 +15,7 @@ function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }
 
+// Delete one saved template owned by the signed-in user.
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -47,6 +48,7 @@ export async function DELETE(
   return new Response(null, { status: 204 });
 }
 
+// Update one saved template by its dynamic route id.
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },

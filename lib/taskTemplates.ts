@@ -1,5 +1,6 @@
 import type { TaskTemplateOption } from "@/types/taskTemplates";
 
+// Default templates shown to every user without database storage.
 export const builtInTaskTemplates: TaskTemplateOption[] = [
   {
     id: "built-in-daily-planner",

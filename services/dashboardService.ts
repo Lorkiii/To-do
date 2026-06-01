@@ -247,6 +247,10 @@ function buildDashboardViewModel(
 export async function getDashboardViewModel(
   authorId?: string,
 ): Promise<DashboardViewModel> {
+  if (!authorId) {
+    return buildDashboardViewModel([], []);
+  }
+
   try {
     const [tasks, posts] = await Promise.all([
       prisma.task.findMany({
@@ -267,7 +271,10 @@ export async function getDashboardViewModel(
         },
       }),
       prisma.post.findMany({
-        where: { deletedAt: null },
+        where: {
+          authorId,
+          deletedAt: null,
+        },
         orderBy: { updatedAt: "desc" },
         select: {
           id: true,

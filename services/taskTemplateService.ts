@@ -27,12 +27,14 @@ type TaskTemplateWithChecklistItems = Omit<
   checklistItems: { title: string }[];
 };
 
+// Clean checklist text before storing it.
 function normalizeChecklistItems(items: readonly string[] = []) {
   return items
     .map((item) => item.trim())
     .filter((item) => item.length > 0);
 }
 
+// Shape Prisma checklist rows into simple string arrays for the UI.
 function toTaskTemplateRecord(
   template: TaskTemplateWithChecklistItems,
 ): TaskTemplateRecord {
@@ -42,6 +44,7 @@ function toTaskTemplateRecord(
   };
 }
 
+// Load all saved templates for one user.
 export function listTaskTemplates(authorId: string) {
   return prisma.taskTemplate
     .findMany({
@@ -65,6 +68,7 @@ export function listTaskTemplates(authorId: string) {
     .then((templates) => templates.map(toTaskTemplateRecord));
 }
 
+// Find one template while enforcing user ownership.
 export async function getTaskTemplate(authorId: string, templateId: string) {
   const template = await prisma.taskTemplate.findFirst({
     where: {
@@ -90,6 +94,7 @@ export async function getTaskTemplate(authorId: string, templateId: string) {
   return template ? toTaskTemplateRecord(template) : null;
 }
 
+// Save a new template and its ordered checklist items together.
 export async function createTaskTemplate(
   authorId: string,
   data: CreateTaskTemplateInput,
@@ -131,6 +136,7 @@ export async function createTaskTemplate(
   });
 }
 
+// Merge partial edits, then replace checklist rows in order.
 export async function updateTaskTemplate(
   authorId: string,
   templateId: string,
@@ -189,6 +195,7 @@ export async function updateTaskTemplate(
   });
 }
 
+// Remove one template only if it belongs to the user.
 export async function deleteTaskTemplate(authorId: string, templateId: string) {
   const { count } = await prisma.taskTemplate.deleteMany({
     where: {

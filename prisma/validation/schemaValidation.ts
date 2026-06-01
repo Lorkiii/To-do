@@ -86,7 +86,7 @@ export function validateField<T>(schema: z.ZodType<T>, value: unknown) {
 
   return getFirstValidationMessage(result.error);
 }
-
+// Task request fields.
 const taskFields = {
   title: requiredText(validationRules.task.title),
   description: requiredText(validationRules.task.description),
@@ -105,7 +105,9 @@ const taskFields = {
   pinned: z.boolean().optional(),
 };
 
+// Template request fields.
 const taskTemplateFields = {
+  // Template name is extra; the other fields mirror task defaults.
   name: requiredText(validationRules.taskTemplate.name),
   title: taskFields.title,
   description: taskFields.description,
@@ -114,6 +116,7 @@ const taskTemplateFields = {
   checklistItems: taskFields.checklistItems,
 };
 
+// Post request fields.
 const postFields = {
   title: requiredText(validationRules.post.title),
   content: requiredText(validationRules.post.content),

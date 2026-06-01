@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import {
   ArrowDown01Icon,
+  BloggerIcon,
   BookOpenTextIcon,
   Calendar03Icon,
   DashboardSquare01Icon,
@@ -18,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type DashboardNavItem = {
-  id: "dashboard" | "tasks" | "activity" | "templates" | "settings";
+  id: "dashboard" | "tasks" | "activity" | "templates" | "blog" | "settings";
   label: string;
   href: string;
   icon: IconSvgElement;
@@ -41,6 +42,12 @@ const dashboardNavItems: DashboardNavItem[] = [
     label: "Activity",
     href: "/dashboard#activity",
     icon: Calendar03Icon,
+  },
+  {
+    id: "blog",
+    label: "Blog",
+    href: "/dashboard/blog",
+    icon: BloggerIcon,
   },
   {
     id: "settings",

@@ -54,6 +54,7 @@ model Task {
 }
 
 model TaskTemplate {
+  // Reusable task starter saved by one user.
   id             String                      @id @default(uuid())
   name           String
   title          String
@@ -81,6 +82,7 @@ model TaskChecklistItem {
 }
 
 model TaskTemplateChecklistItem {
+  // Ordered checklist step belonging to a saved template.
   id         String       @id @default(uuid())
   title      String
   position   Int          @default(0)

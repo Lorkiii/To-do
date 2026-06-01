@@ -1,21 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
 
 import { authOptions } from "@/lib/auth";
 import {
-  createTaskTemplateSchema,
+  createPostSchema,
   getFirstValidationMessage,
 } from "@/prisma/validation/schemaValidation";
-import {
-  createTaskTemplate,
-  listTaskTemplates,
-} from "@/services/taskTemplateService";
+import { createPost, listPosts } from "@/services/postService";
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }
 
-// List saved templates for the signed-in user.
 export async function GET() {
   const session = await getServerSession(authOptions);
   const authorId = session?.user?.id;
@@ -24,12 +20,18 @@ export async function GET() {
     return unauthorizedResponse();
   }
 
-  const templates = await listTaskTemplates(authorId);
+  try {
+    const posts = await listPosts(authorId);
 
-  return NextResponse.json({ templates });
+    return NextResponse.json({ posts });
+  } catch {
+    return NextResponse.json(
+      { error: "Unable to load posts." },
+      { status: 500 },
+    );
+  }
 }
 
-// Create a new saved template from the request body.
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   const authorId = session?.user?.id;
@@ -48,7 +50,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const validatedData = createTaskTemplateSchema.safeParse(body);
+  const validatedData = createPostSchema.safeParse(body);
 
   if (!validatedData.success) {
     return NextResponse.json(
@@ -58,12 +60,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const template = await createTaskTemplate(authorId, validatedData.data);
+    const post = await createPost(authorId, validatedData.data);
 
-    return NextResponse.json({ template }, { status: 201 });
+    return NextResponse.json({ post }, { status: 201 });
   } catch {
     return NextResponse.json(
-      { error: "Unable to save task template." },
+      { error: "Unable to create post." },
       { status: 500 },
     );
   }
