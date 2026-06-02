@@ -12,7 +12,7 @@ import { authOptions } from "@/lib/auth";
 import { getDashboardViewModel } from "@/services/dashboardService";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { FloatingCreateMenu } from "@/components/features/create/floatingCreateMenu";
 
 export const dynamic = "force-dynamic";
 
@@ -71,16 +71,8 @@ export default async function DashboardPage() {
           </p>
         </section>
 
-        <AddTaskModal
-        trigger={
-          <FloatingActionButton
-            label="Add task"
-            className="fixed bottom-6 right-6 z-50 size-16 rounded-full bg-primary text-lg primary-foreground shadow-xl hover:bg-primary/90"
-          >
-            +
-          </FloatingActionButton>
-        }
-      />
+        <FloatingCreateMenu />
+        
       </div>
     </DashboardSidebar> 
   );

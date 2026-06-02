@@ -24,7 +24,7 @@ function nameValidation(label: string) {
 
 
 // required text
-function requiredText(rule: TextRule) {
+export function requiredText(rule: TextRule) {
   const minLength = rule.minLength ?? 1;
   const message =
     minLength === 1

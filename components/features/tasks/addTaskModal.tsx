@@ -27,8 +27,10 @@ const inputClassName =
 const textAreaClassName = `${inputClassName} min-h-[6.5rem] py-2`;
 
 type AddTaskModalProps = {
-  trigger: ReactNode;
+  trigger?: ReactNode;
   initialTemplate?: TaskTemplateOption;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 type TaskFormState = {
@@ -87,10 +89,10 @@ function getTemplatePayload(
   };
 }
 
-export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
+export function AddTaskModal({ trigger, initialTemplate, open: controlledOpen, onOpenChange}: AddTaskModalProps) {
   const router = useRouter();
   // Local UI state for task creation and template actions.
-  const [open, setOpen] = useState(false);
+
   const [form, setForm] = useState<TaskFormState>(emptyTaskForm);
   const [checklistItems, setChecklistItems] = useState<ChecklistDraftItem[]>([]);
   const [savedTemplates, setSavedTemplates] = useState<SavedTaskTemplate[]>([]);
@@ -102,6 +104,17 @@ export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [isDeletingTemplate, setIsDeletingTemplate] = useState(false);
   const [isSavingTask, setIsSavingTask] = useState(false);
+
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+
+function setOpen(nextOpen: boolean) {
+  if (onOpenChange) {
+    onOpenChange(nextOpen);
+    return;
+  }
+  setInternalOpen(nextOpen);
+}
 
   // Combine built-in templates with the user's saved templates.
   const templateOptions = useMemo<TaskTemplateOption[]>(
@@ -120,6 +133,7 @@ export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
     ],
     [savedTemplates],
   );
+
 
   // Find the selected template from the combined list.
   const selectedTemplate = templateOptions.find(
@@ -350,7 +364,7 @@ export function AddTaskModal({ trigger, initialTemplate }: AddTaskModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add new task</DialogTitle>
