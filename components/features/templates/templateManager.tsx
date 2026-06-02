@@ -3,7 +3,7 @@
 import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
 
-import { AddTaskModal } from "@/components/features/dashboard/addTaskModal";
+import { AddTaskModal } from "@/components/features/tasks/addTaskModal";
 import { Button } from "@/components/ui/button";
 import { builtInTaskTemplates } from "@/lib/taskTemplates";
 import type {

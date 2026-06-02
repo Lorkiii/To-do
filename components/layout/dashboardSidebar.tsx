@@ -14,8 +14,6 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
 
-import { AddTaskModal } from "@/components/features/dashboard/addTaskModal";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type DashboardNavItem = {
@@ -249,18 +247,7 @@ export function DashboardSidebar({
             />
           ))}
           <DashboardTaskNavGroup activeItemId={activeItemId} isMobile />
-          <div className="flex flex-1 justify-center">
-            <AddTaskModal
-              trigger={
-                <Button
-                  aria-label="Add task"
-                  size="icon-lg"
-                  className="size-12 rounded-full bg-primary text-lg text-primary-foreground shadow-lg hover:bg-primary/90">
-                  +
-                </Button>
-              }
-            />
-          </div>
+
           {mobileSecondaryItems.map((item) => (
             <DashboardNavLink
               key={item.id}

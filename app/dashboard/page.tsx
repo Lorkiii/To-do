@@ -5,13 +5,14 @@ import {
 } from "@/components/features/dashboard/activityLists";
 import { DashboardProgressSummary } from "@/components/features/dashboard/progressSummary";
 import { DashboardStatCards } from "@/components/features/dashboard/statCards";
-import { AddTaskModal } from "@/components/features/dashboard/addTaskModal";
+import { AddTaskModal } from "@/components/features/tasks/addTaskModal";
+import { FloatingActionButton } from "@/components/ui/FloatingAddButton";
 import { DashboardSidebar } from "@/components/layout/dashboardSidebar";
-import { Button } from "@/components/ui/button";
+import { authOptions } from "@/lib/auth";
 import { getDashboardViewModel } from "@/services/dashboardService";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
@@ -37,15 +38,7 @@ export default async function DashboardPage() {
             Updated {dashboard.generatedAt}
           </p>
         </div>
-        <AddTaskModal
-          trigger={
-            <Button
-              size="lg"
-              className="hidden h-10 rounded-xl bg-primary px-4 text-primary-foreground hover:bg-primary/90 md:inline-flex">
-              Add task
-            </Button>
-          }
-        />
+
       </header>
 
       <div className="mt-5 space-y-5">
@@ -77,7 +70,18 @@ export default async function DashboardPage() {
             preferences when those backend settings are available.
           </p>
         </section>
+
+        <AddTaskModal
+        trigger={
+          <FloatingActionButton
+            label="Add task"
+            className="fixed bottom-6 right-6 z-50 size-16 rounded-full bg-primary text-lg primary-foreground shadow-xl hover:bg-primary/90"
+          >
+            +
+          </FloatingActionButton>
+        }
+      />
       </div>
-    </DashboardSidebar>
+    </DashboardSidebar> 
   );
 }
