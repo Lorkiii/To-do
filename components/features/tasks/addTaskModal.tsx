@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { TaskDateInput } from "@/components/features/tasks/taskDateInput";
 import { builtInTaskTemplates } from "@/lib/taskTemplates";
 import type {
   ChecklistDraftItem,
@@ -524,19 +525,13 @@ function setOpen(nextOpen: boolean) {
                 <option value="Done">Done</option>
               </select>
             </div>
-            <div className="space-y-2">
-              <label htmlFor="task-due-date" className="text-sm font-medium">
-                Due date
-              </label>
-              <input
-                id="task-due-date"
-                name="dueDate"
-                type="date"
-                value={form.dueDate}
-                className={inputClassName}
-                onChange={handleFieldChange}
-              />
-            </div>
+            <TaskDateInput
+              id="task-due-date"
+              name="dueDate"
+              label="Due date"
+              value={form.dueDate}
+              onChange={handleFieldChange}
+            />
           </div>
 
           <div className="space-y-3 rounded-xl border border-border bg-card/25 p-3">

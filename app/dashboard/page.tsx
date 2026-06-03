@@ -5,8 +5,6 @@ import {
 } from "@/components/features/dashboard/activityLists";
 import { DashboardProgressSummary } from "@/components/features/dashboard/progressSummary";
 import { DashboardStatCards } from "@/components/features/dashboard/statCards";
-import { AddTaskModal } from "@/components/features/tasks/addTaskModal";
-import { FloatingActionButton } from "@/components/ui/FloatingAddButton";
 import { DashboardSidebar } from "@/components/layout/dashboardSidebar";
 import { authOptions } from "@/lib/auth";
 import { getDashboardViewModel } from "@/services/dashboardService";

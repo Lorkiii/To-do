@@ -1,9 +1,33 @@
 import type { z } from "zod";
 
 import prisma from "@/prisma/client";
-import type { createTaskSchema } from "@/prisma/validation/schemaValidation";
+import type {
+  createTaskSchema,
+  updateTaskSchema,
+} from "@/prisma/validation/schemaValidation";
+import type { TaskListItem } from "@/types/tasks";
 
 type CreateTaskInput = z.infer<typeof createTaskSchema>;
+type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
+type TaskUpdateData = {
+  title?: string;
+  description?: string;
+  priority?: string;
+  status?: string;
+  dueDate?: Date | null;
+  pinned?: boolean;
+};
+
+const taskListSelect = {
+  id: true,
+  title: true,
+  description: true,
+  priority: true,
+  status: true,
+  dueDate: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
 
 function normalizeChecklistItems(items: readonly string[] = []) {
   return items
@@ -17,6 +41,94 @@ function toDateOrNull(value?: string) {
   }
 
   return new Date(value);
+}
+
+function toTaskUpdateData(data: UpdateTaskInput) {
+  const taskUpdateData: TaskUpdateData = {};
+
+  if (data.title !== undefined) {
+    taskUpdateData.title = data.title;
+  }
+
+  if (data.description !== undefined) {
+    taskUpdateData.description = data.description;
+  }
+
+  if (data.priority !== undefined) {
+    taskUpdateData.priority = data.priority;
+  }
+
+  if (data.status !== undefined) {
+    taskUpdateData.status = data.status;
+  }
+
+  if (data.pinned !== undefined) {
+    taskUpdateData.pinned = data.pinned;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(data, "dueDate")) {
+    taskUpdateData.dueDate = toDateOrNull(data.dueDate);
+  }
+
+  return taskUpdateData;
+}
+
+export function listTasks(authorId: string): Promise<TaskListItem[]> {
+  return prisma.task.findMany({
+    where: {
+      authorId,
+      deletedAt: null,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    select: taskListSelect,
+  });
+}
+
+export async function updateTask(
+  authorId: string,
+  taskId: string,
+  data: UpdateTaskInput,
+): Promise<TaskListItem | null> {
+  const taskUpdateData = toTaskUpdateData(data);
+
+  const { count } = await prisma.task.updateMany({
+    where: {
+      id: taskId,
+      authorId,
+      deletedAt: null,
+    },
+    data: taskUpdateData,
+  });
+
+  if (count === 0) {
+    return null;
+  }
+
+  return prisma.task.findFirst({
+    where: {
+      id: taskId,
+      authorId,
+      deletedAt: null,
+    },
+    select: taskListSelect,
+  });
+}
+
+export async function softDeleteTask(authorId: string, taskId: string) {
+  const { count } = await prisma.task.updateMany({
+    where: {
+      id: taskId,
+      authorId,
+      deletedAt: null,
+    },
+    data: {
+      deletedAt: new Date(),
+    },
+  });
+
+  return count > 0;
 }
 
 export async function createTask(authorId: string, data: CreateTaskInput) {

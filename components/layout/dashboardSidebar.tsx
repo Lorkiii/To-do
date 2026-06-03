@@ -59,7 +59,7 @@ const taskNavItems: DashboardNavItem[] = [
   {
     id: "tasks",
     label: "Task list",
-    href: "/dashboard#tasks",
+    href: "/dashboard/tasks",
     icon: Task01Icon,
   },
   {
