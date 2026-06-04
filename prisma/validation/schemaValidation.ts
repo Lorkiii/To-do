@@ -187,6 +187,9 @@ export const loginFieldSchemas = {
 // Schemas are composed from shared rules so field constraints stay in one place.
 export const createTaskSchema = z.object(taskFields);
 export const updateTaskSchema = z.object(taskFields).partial();
+export const updateChecklistItemSchema = z.object({
+  completed: z.boolean(),
+});
 export const createTaskTemplateSchema = z.object(taskTemplateFields);
 export const updateTaskTemplateSchema = z.object(taskTemplateFields).partial();
 

@@ -25,6 +25,15 @@ const taskListSelect = {
   priority: true,
   status: true,
   dueDate: true,
+  checklistItems: {
+    orderBy: { position: "asc" },
+    select: {
+      id: true,
+      title: true,
+      completed: true,
+      position: true,
+    },
+  },
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -73,6 +82,17 @@ function toTaskUpdateData(data: UpdateTaskInput) {
   return taskUpdateData;
 }
 
+function findTask(authorId: string, taskId: string) {
+  return prisma.task.findFirst({
+    where: {
+      id: taskId,
+      authorId,
+      deletedAt: null,
+    },
+    select: taskListSelect,
+  });
+}
+
 export function listTasks(authorId: string): Promise<TaskListItem[]> {
   return prisma.task.findMany({
     where: {
@@ -106,14 +126,7 @@ export async function updateTask(
     return null;
   }
 
-  return prisma.task.findFirst({
-    where: {
-      id: taskId,
-      authorId,
-      deletedAt: null,
-    },
-    select: taskListSelect,
-  });
+  return findTask(authorId, taskId);
 }
 
 export async function softDeleteTask(authorId: string, taskId: string) {
@@ -129,6 +142,44 @@ export async function softDeleteTask(authorId: string, taskId: string) {
   });
 
   return count > 0;
+}
+
+export async function updateChecklistItem(
+  authorId: string,
+  taskId: string,
+  checklistItemId: string,
+  completed: boolean,
+): Promise<TaskListItem | null> {
+  const task = await prisma.task.findFirst({
+    where: {
+      id: taskId,
+      authorId,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!task) {
+    return null;
+  }
+
+  const { count } = await prisma.taskChecklistItem.updateMany({
+    where: {
+      id: checklistItemId,
+      taskId,
+    },
+    data: {
+      completed,
+    },
+  });
+
+  if (count === 0) {
+    return null;
+  }
+
+  return findTask(authorId, taskId);
 }
 
 export async function createTask(authorId: string, data: CreateTaskInput) {
@@ -152,26 +203,7 @@ export async function createTask(authorId: string, data: CreateTaskInput) {
           })),
         },
       },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        priority: true,
-        status: true,
-        dueDate: true,
-        authorId: true,
-        createdAt: true,
-        updatedAt: true,
-        checklistItems: {
-          orderBy: { position: "asc" },
-          select: {
-            id: true,
-            title: true,
-            completed: true,
-            position: true,
-          },
-        },
-      },
+      select: taskListSelect,
     });
   });
 }

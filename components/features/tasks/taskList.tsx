@@ -165,6 +165,10 @@ export default function TaskList({ tasks }: TaskListProps) {
   const [editingTask, setEditingTask] = useState<TaskListItem | null>(null);
   const [deletingTask, setDeletingTask] = useState<TaskListItem | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState("");
+  const [completingTaskId, setCompletingTaskId] = useState("");
+  const [updatingChecklistItemIds, setUpdatingChecklistItemIds] = useState<
+    string[]
+  >([]);
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -176,6 +180,31 @@ export default function TaskList({ tasks }: TaskListProps) {
     [deletedTaskIds, tasks, updatedTasks],
   );
   const summary = useMemo(() => getTaskSummary(taskItems), [taskItems]);
+
+  function updateChecklistItemState(
+    taskId: string,
+    checklistItemId: string,
+    completed: boolean,
+  ) {
+    setUpdatedTasks((currentTasks) => {
+      const currentTask =
+        currentTasks[taskId] ?? tasks.find((task) => task.id === taskId);
+
+      if (!currentTask) {
+        return currentTasks;
+      }
+
+      return {
+        ...currentTasks,
+        [taskId]: {
+          ...currentTask,
+          checklistItems: currentTask.checklistItems.map((item) =>
+            item.id === checklistItemId ? { ...item, completed } : item,
+          ),
+        },
+      };
+    });
+  }
 
   async function handleSaveTask(taskId: string, payload: TaskEditPayload) {
     setError("");
@@ -211,39 +240,39 @@ export default function TaskList({ tasks }: TaskListProps) {
     }
   }
 
-async function handleCompleteTask(taskId: string) {
-  setError("");
-  setIsSaving(true);
-  try {
-    const response = await fetch(`/api/tasks/${taskId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ 
+  async function handleCompleteTask(taskId: string) {
+    setError("");
+    setCompletingTaskId(taskId);
 
-        status: "Done",
-      }),
-    });
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: "Done",
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(
-        await getResponseError(response, "Unable to complete task."),
-      );
-    }
+      if (!response.ok) {
+        throw new Error(
+          await getResponseError(response, "Unable to complete task."),
+        );
+      }
 
-    const data = await response.json();
+      const data = await response.json();
 
-    setUpdatedTasks((currentTasks) => ({
-      ...currentTasks,
-      [data.task.id]: data.task,
-    }));
+      setUpdatedTasks((currentTasks) => ({
+        ...currentTasks,
+        [data.task.id]: data.task,
+      }));
       setEditingTask(null);
       router.refresh();
     } catch (caughtError) {
       setError(getErrorMessage(caughtError));
     } finally {
-      setIsSaving(false);
+      setCompletingTaskId("");
     }
   }
 
@@ -279,6 +308,62 @@ async function handleCompleteTask(taskId: string) {
     }
   }
 
+  async function handleToggleChecklistItem(
+    taskId: string,
+    checklistItemId: string,
+    completed: boolean,
+  ) {
+    const task = taskItems.find((taskItem) => taskItem.id === taskId);
+    const checklistItem = task?.checklistItems.find(
+      (item) => item.id === checklistItemId,
+    );
+
+    if (!checklistItem) {
+      return;
+    }
+
+    setError("");
+    setUpdatingChecklistItemIds((currentIds) => [
+      ...currentIds,
+      checklistItemId,
+    ]);
+    updateChecklistItemState(taskId, checklistItemId, completed);
+
+    try {
+      const response = await fetch(
+        `/api/tasks/${taskId}/checklist-items/${checklistItemId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ completed }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          await getResponseError(response, "Unable to update checklist item."),
+        );
+      }
+
+      const data = await response.json();
+
+      setUpdatedTasks((currentTasks) => ({
+        ...currentTasks,
+        [data.task.id]: data.task,
+      }));
+      router.refresh();
+    } catch (caughtError) {
+      updateChecklistItemState(taskId, checklistItemId, checklistItem.completed);
+      setError(getErrorMessage(caughtError));
+    } finally {
+      setUpdatingChecklistItemIds((currentIds) =>
+        currentIds.filter((itemId) => itemId !== checklistItemId),
+      );
+    }
+  }
+
   if (taskItems.length === 0) {
     return (
       <div className="space-y-4">
@@ -311,9 +396,12 @@ async function handleCompleteTask(taskId: string) {
             key={task.id}
             task={task}
             isDeleting={deletingTaskId === task.id}
+            isCompleting={completingTaskId === task.id}
+            updatingChecklistItemIds={updatingChecklistItemIds}
             onDelete={setDeletingTask}
             onEdit={setEditingTask}
             onComplete={() => handleCompleteTask(task.id)}
+            onChecklistItemToggle={handleToggleChecklistItem}
           />
         ))}
       </div>
