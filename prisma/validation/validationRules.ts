@@ -35,3 +35,9 @@ export const validationRules = {
     password: { label: "Password", minLength: 6 },
   },
 } as const;
+
+export const uploadImageRules = {
+ maxFileSize: 5 * 1024 * 1024, // 5MB
+ maxImagePerPost: 10,
+ allowedContentTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+} as const;

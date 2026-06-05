@@ -23,18 +23,62 @@ model User {
   posts         Post[]
   tasks         Task[]
   taskTemplates TaskTemplate[]
+  mediaAssets   MediaAsset[]
 }
 
 model Post {
-  id        String    @id @default(uuid())
-  title     String
-  content   String?
-  published Boolean   @default(false)
-  author    User?     @relation(fields: [authorId], references: [id])
-  authorId  String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id           String      @id @default(uuid())
+  title        String
+  content      String?
+  published    Boolean     @default(false)
+  coverImageId String?
+  coverImage   MediaAsset? @relation("PostCoverImage", fields: [coverImageId], references: [id])
+  postImages   PostImage[]
+  author       User?       @relation(fields: [authorId], references: [id])
+  authorId     String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+}
+
+model MediaAsset {
+  id           String      @id @default(uuid())
+  ownerId      String
+  owner        User        @relation(fields: [ownerId], references: [id])
+  url          String
+  pathName     String
+  fileName     String
+  fileType     String
+  contentType  String
+  sizeBytes    Int
+  width        Int
+  height       Int
+  cropX        Int?
+  cropY        Int?
+  cropWidth    Int?
+  cropHeight   Int?
+  alt          String?
+  coverForPost Post[]       @relation("PostCoverImage")
+  postImages   PostImage[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+
+  @@index([ownerId])
+}
+
+model PostImage {
+  id           String     @id @default(uuid())
+  postId       String
+  mediaAssetId String
+  position     Int        @default(0)
+  caption      String?
+  altText      String?
+  mediaAsset   MediaAsset @relation(fields: [mediaAssetId], references: [id])
+  post         Post       @relation(fields: [postId], references: [id])
+
+  @@index([postId, position])
+  @@index([mediaAssetId])
 }
 
 model Task {

@@ -1,7 +1,7 @@
 import { z, ZodError } from "zod";
 
 import { validationRules } from "./validationRules";
-import { namePattern, emailPattern, usernamePattern } from "./validationRules";
+import { namePattern, emailPattern, usernamePattern, uploadImageRules } from "./validationRules";
 
 type EnumValues = readonly [string, ...string[]];
 type TextRule = {
@@ -19,9 +19,11 @@ function nameValidation(label: string) {
     .string({ error: `${label} is required` })
     .trim()
     .min(1, `${label} is required`)
-    .regex(namePattern, `Invalid ${label.toLowerCase()}. Only letters are allowed.`);
+    .regex(
+      namePattern,
+      `Invalid ${label.toLowerCase()}. Only letters are allowed.`,
+    );
 }
-
 
 // required text
 export function requiredText(rule: TextRule) {
@@ -55,7 +57,6 @@ function emailField(rule: TextRule) {
     .min(1, `${rule.label} is required`)
     .regex(emailPattern, `Invalid ${rule.label.toLowerCase()}`);
 }
-
 
 function enumField(label: string, values: EnumValues) {
   return z.enum(values, {
@@ -116,12 +117,27 @@ const taskTemplateFields = {
   checklistItems: taskFields.checklistItems,
 };
 
+export const postImageSchema = z.object({
+  mediaAssetId: z.string().uuid(),
+  altText: z.string().trim().max(160).optional(),
+  caption: z.string().trim().max(160).optional(),
+  position: z.number().int().min(0).optional(),
+});
+export const updatePostImageSchema = z.object({
+  mediaAssetId: z.string().uuid().optional(),
+  altText: z.string().trim().max(160).optional(),
+  caption: z.string().trim().max(160).optional(),
+  position: z.number().int().min(0).optional(),
+});
 // Post request fields.
 const postFields = {
   title: requiredText(validationRules.post.title),
   content: requiredText(validationRules.post.content),
   pinned: z.boolean().optional(),
+  coverImageId: z.string().uuid().optional(),
+  postImages: z.array(postImageSchema).max(uploadImageRules.maxImagePerPost).optional(),
 };
+
 
 export const accountFieldSchemas = {
   firstName: nameValidation(validationRules.user.firstName.label),
