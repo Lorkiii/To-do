@@ -18,6 +18,8 @@ import {
   createPostSchema,
   getFirstValidationMessage,
 } from "@/prisma/validation/schemaValidation";
+import { ImageUploadField } from "@/components/features/uploads/imageUploadField";
+import type { UploadedImage } from "@/types/media";
 
 type AddBlogPostModalProps = {
   trigger?: ReactNode;
@@ -53,6 +55,8 @@ function getErrorMessage(error: unknown) {
 export function AddBlogPostModal({ trigger,initialForm, open: controlledOpen, onOpenChange}: AddBlogPostModalProps) {
 
   const [form, setForm] = useState<BlogPostFormState>(emptyBlogPostForm);
+  const [images, setImages] = useState<UploadedImage[]>([]);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -95,6 +99,13 @@ export function AddBlogPostModal({ trigger,initialForm, open: controlledOpen, on
     const payload = {
       title: form.title.trim(),
       content: form.content.trim(),
+      // The first uploaded image is reused as the cover while all images keep their order.
+      coverImageId: images[0]?.mediaAssetId,
+      postImages: images.map((image, position) => ({
+        mediaAssetId: image.mediaAssetId,
+        altText: image.alt,
+        position,
+      })),
     };
 
     // validate the payload
@@ -126,6 +137,7 @@ export function AddBlogPostModal({ trigger,initialForm, open: controlledOpen, on
 
       // reset the form
       setForm(emptyBlogPostForm);
+      setImages([]);
       // close the modal
       setOpen(false);
       router.refresh();
@@ -177,6 +189,12 @@ export function AddBlogPostModal({ trigger,initialForm, open: controlledOpen, on
             />
           </div>
 
+          <ImageUploadField
+            value={images}
+            onChange={setImages}
+            onUploadingChange={setIsUploadingImages}
+          />
+
           {error && (
             <p className="text-sm text-destructive" role="alert">
               {error}
@@ -191,7 +209,7 @@ export function AddBlogPostModal({ trigger,initialForm, open: controlledOpen, on
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSaving}>
+            <Button type="submit" disabled={isSaving || isUploadingImages}>
               {isSaving ? "Saving" : "Save post"}
             </Button>
           </DialogFooter>

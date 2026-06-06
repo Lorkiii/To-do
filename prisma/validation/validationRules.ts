@@ -37,7 +37,7 @@ export const validationRules = {
 } as const;
 
 export const uploadImageRules = {
- maxFileSize: 5 * 1024 * 1024, // 5MB
- maxImagePerPost: 10,
- allowedContentTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+  maxFileSizeBytes: 5 * 1024 * 1024,
+  maxImagesPerPost: 10,
+  allowedContentTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
 } as const;

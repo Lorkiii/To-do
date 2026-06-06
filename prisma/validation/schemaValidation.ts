@@ -1,7 +1,12 @@
 import { z, ZodError } from "zod";
 
-import { validationRules } from "./validationRules";
-import { namePattern, emailPattern, usernamePattern, uploadImageRules } from "./validationRules";
+import {
+  emailPattern,
+  namePattern,
+  uploadImageRules,
+  usernamePattern,
+  validationRules,
+} from "./validationRules";
 
 type EnumValues = readonly [string, ...string[]];
 type TextRule = {
@@ -129,13 +134,41 @@ export const updatePostImageSchema = z.object({
   caption: z.string().trim().max(160).optional(),
   position: z.number().int().min(0).optional(),
 });
+
+const optionalCropCoordinate = z.number().int().nonnegative().optional();
+
+export const imageUploadClientPayloadSchema = z.object({
+  mediaAssetId: z.string().uuid(),
+  fileName: z.string().trim().min(1).max(255),
+  sizeBytes: z
+    .number()
+    .int()
+    .positive()
+    .max(uploadImageRules.maxFileSizeBytes),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  cropX: optionalCropCoordinate,
+  cropY: optionalCropCoordinate,
+  cropWidth: optionalCropCoordinate,
+  cropHeight: optionalCropCoordinate,
+  alt: z.string().trim().max(160).optional(),
+});
+
+export const imageUploadTokenPayloadSchema =
+  imageUploadClientPayloadSchema.extend({
+    ownerId: z.string().uuid(),
+  });
+
 // Post request fields.
 const postFields = {
   title: requiredText(validationRules.post.title),
   content: requiredText(validationRules.post.content),
   pinned: z.boolean().optional(),
   coverImageId: z.string().uuid().optional(),
-  postImages: z.array(postImageSchema).max(uploadImageRules.maxImagePerPost).optional(),
+  postImages: z
+    .array(postImageSchema)
+    .max(uploadImageRules.maxImagesPerPost)
+    .optional(),
 };
 
 

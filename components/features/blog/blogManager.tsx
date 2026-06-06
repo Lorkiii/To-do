@@ -2,12 +2,15 @@
 
 import type { ChangeEvent, FormEvent } from "react";
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { BloggerIcon, TimeScheduleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Button } from "@/components/ui/button";
+import { ImageUploadField } from "@/components/features/uploads/imageUploadField";
 import type { BlogPostListItem } from "@/types/blog";
+import type { UploadedImage } from "@/types/media";
 
 const inputClassName =
   "h-11 w-full rounded-xl border border-input bg-card/40 px-3 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25";
@@ -39,7 +42,9 @@ function getErrorMessage(error: unknown) {
 export function BlogManager({ posts }: BlogManagerProps) {
   const router = useRouter();
   const [form, setForm] = useState<BlogFormState>(emptyBlogForm);
+  const [images, setImages] = useState<UploadedImage[]>([]);
   const [error, setError] = useState("");
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   function handleFieldChange(
@@ -60,6 +65,13 @@ export function BlogManager({ posts }: BlogManagerProps) {
     const payload = {
       title: form.title.trim(),
       content: form.content.trim(),
+      // Image uploads finish first; the post stores only their database IDs.
+      coverImageId: images[0]?.mediaAssetId,
+      postImages: images.map((image, position) => ({
+        mediaAssetId: image.mediaAssetId,
+        altText: image.alt,
+        position,
+      })),
     };
 
     if (!payload.title || !payload.content) {
@@ -84,6 +96,7 @@ export function BlogManager({ posts }: BlogManagerProps) {
       }
 
       setForm(emptyBlogForm);
+      setImages([]);
       router.refresh();
     } catch (caughtError) {
       setError(getErrorMessage(caughtError));
@@ -139,6 +152,12 @@ export function BlogManager({ posts }: BlogManagerProps) {
             />
           </div>
 
+          <ImageUploadField
+            value={images}
+            onChange={setImages}
+            onUploadingChange={setIsUploadingImages}
+          />
+
           {error && (
             <p className="text-sm text-destructive" role="alert">
               {error}
@@ -150,7 +169,7 @@ export function BlogManager({ posts }: BlogManagerProps) {
               type="submit"
               size="lg"
               className="h-10 rounded-xl px-4"
-              disabled={isSaving}>
+              disabled={isSaving || isUploadingImages}>
               <HugeiconsIcon icon={BloggerIcon} strokeWidth={2} />
               {isSaving ? "Saving" : "Save post"}
             </Button>
@@ -189,6 +208,25 @@ export function BlogManager({ posts }: BlogManagerProps) {
                     <p className="mt-2 line-clamp-4 text-sm leading-6 text-muted-foreground">
                       {post.content}
                     </p>
+                    {post.images.length > 0 && (
+                      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {post.images.map((image) => (
+                          <div
+                            key={image.id}
+                            className="relative aspect-video overflow-hidden rounded-md border border-border bg-muted"
+                          >
+                            <Image
+                              src={image.url}
+                              alt={image.altText || image.fileName}
+                              fill
+                              unoptimized
+                              sizes="(max-width: 640px) 50vw, 180px"
+                              className="object-cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">

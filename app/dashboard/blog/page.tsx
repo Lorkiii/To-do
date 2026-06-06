@@ -23,6 +23,12 @@ function toBlogPostListItem(post: Awaited<ReturnType<typeof listPosts>>[number])
     id: post.id,
     title: post.title,
     content: post.content ?? "",
+    images: post.postImages.map((postImage) => ({
+      id: postImage.id,
+      url: postImage.mediaAsset.url,
+      fileName: postImage.mediaAsset.fileName,
+      altText: postImage.altText ?? postImage.mediaAsset.alt ?? undefined,
+    })),
     createdAt: formatPostDate(post.createdAt),
     updatedAt: formatPostDate(post.updatedAt),
   } satisfies BlogPostListItem;

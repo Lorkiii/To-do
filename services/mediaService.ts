@@ -1,6 +1,9 @@
+import { Prisma } from "@prisma/client";
+
 import prisma from "@/prisma/client";
 
 type CreateMediaAssetInput = {
+  id: string;
   url: string;
   fileType: string;
   sizeBytes: number;
@@ -24,25 +27,33 @@ type UpdateMediaAssetInput = {
   alt?: string;
 };
 export function createMediaAsset(ownerId: string, data: CreateMediaAssetInput) {
-  return prisma.mediaAsset.create({
-    data: {
-      ...data,
-      ownerId,
-      url: data.url,
-      fileType: data.fileType,
-      sizeBytes: data.sizeBytes,
-      fileName: data.fileName,
-      contentType: data.contentType,
-      pathName: data.pathName,
-      width: data.width,
-      height: data.height,
-      cropX: data.cropX,
-      cropY: data.cropY,
-      cropWidth: data.cropWidth,
-      cropHeight: data.cropHeight,
-      alt: data.alt,
-    },
-  });
+  return prisma.mediaAsset
+    .create({
+      data: {
+        ...data,
+        ownerId,
+      },
+    })
+    .catch(async (error: unknown) => {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        const existingAsset = await prisma.mediaAsset.findFirst({
+          where: {
+            id: data.id,
+            ownerId,
+            pathName: data.pathName,
+          },
+        });
+
+        if (existingAsset) {
+          return existingAsset;
+        }
+      }
+
+      throw error;
+    });
 }
 
 // fetches a media asset by id and owner id
