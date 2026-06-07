@@ -48,7 +48,7 @@ export default async function DashboardPage() {
             activeDays={dashboard.summary.activeDays}
             weeklyActivityCount={dashboard.summary.weeklyActivityCount}
           />
-          <DashboardActivityHeatmap activityDays={dashboard.activityDays} />
+          <DashboardActivityHeatmap calendar={dashboard.activityCalendar} />
         </div>
 
         <div className="grid gap-5 xl:grid-cols-2" id="tasks">

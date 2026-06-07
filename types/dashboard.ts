@@ -1,3 +1,5 @@
+import type { BlogPostListItem } from "@/types/blog";
+
 export type DashboardMetricTone = "accent" | "success" | "warning" | "danger";
 
 export type DashboardStat = {
@@ -14,6 +16,29 @@ export type DashboardActivityDay = {
   date: string;
   count: number;
   level: DashboardActivityLevel;
+};
+
+export type ContributionDay = {
+  date: string;
+  count: number;
+  level: DashboardActivityLevel;
+  label: string;
+};
+
+export type ContributionWeek = {
+  id: string;
+  days: Array<ContributionDay | null>;
+};
+
+export type ContributionMonthLabel = {
+  id: string;
+  label: string;
+  weekIndex: number;
+};
+
+export type ContributionCalendar = {
+  countsByDate: Record<string, number>;
+  years: number[];
 };
 
 export type DashboardTaskPreview = {
@@ -33,6 +58,7 @@ export type DashboardActivityItem = {
   description: string;
   type: "task" | "post";
   timestamp: string;
+  post?: BlogPostListItem;
 };
 
 export type DashboardViewModel = {
@@ -45,6 +71,7 @@ export type DashboardViewModel = {
   };
   stats: DashboardStat[];
   activityDays: DashboardActivityDay[];
+  activityCalendar: ContributionCalendar;
   upcomingTasks: DashboardTaskPreview[];
   recentActivities: DashboardActivityItem[];
 };

@@ -1,4 +1,7 @@
-import type { DashboardActivityDay } from "@/types/dashboard";
+import type {
+  ContributionCalendar,
+  DashboardActivityDay,
+} from "@/types/dashboard";
 
 export type ActivityType = "task" | "post";
 
@@ -28,6 +31,7 @@ export type ActivityViewModel = {
   generatedAt: string;
   stats: ActivityStat[];
   activityDays: DashboardActivityDay[];
+  activityCalendar: ContributionCalendar;
   summary: {
     completionRate: number;
     activeDays: number;

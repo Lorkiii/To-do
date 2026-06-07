@@ -1,12 +1,17 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import { BloggerIcon, Task01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
+import { BlogPostModal } from "@/components/features/blog/blogPostModal";
 import { cn } from "@/lib/utils";
 import type {
   DashboardActivityItem,
   DashboardTaskPreview,
 } from "@/types/dashboard";
+import type { BlogPostListItem } from "@/types/blog";
 
 function getTaskStatusClassName(task: DashboardTaskPreview) {
   if (task.isOverdue) {
@@ -85,11 +90,47 @@ export function DashboardTaskList({
   );
 }
 
+function ActivityContent({ activity }: { activity: DashboardActivityItem }) {
+  return (
+    <>
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-accent">
+        <HugeiconsIcon
+          icon={activity.type === "post" ? BloggerIcon : Task01Icon}
+          strokeWidth={2}
+        />
+      </span>
+      <div className="min-w-0">
+        <h3 className="truncate text-sm font-semibold text-foreground">
+          {activity.title}
+        </h3>
+        <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
+          {activity.description}
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          {activity.timestamp}
+        </p>
+      </div>
+    </>
+  );
+}
+
 export function DashboardRecentActivity({
   activities,
 }: {
   activities: DashboardActivityItem[];
 }) {
+  const [selectedPost, setSelectedPost] = useState<BlogPostListItem | null>(
+    null,
+  );
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [postModalSession, setPostModalSession] = useState(0);
+
+  function handleOpenPost(post: BlogPostListItem) {
+    setSelectedPost(post);
+    setPostModalSession((current) => current + 1);
+    setIsPostModalOpen(true);
+  }
+
   return (
     <section className="rounded-xl border border-border bg-card/70 p-5 shadow-sm">
       <div className="flex items-center justify-between gap-3">
@@ -112,31 +153,36 @@ export function DashboardRecentActivity({
             No activity has been recorded yet.
           </p>
         ) : (
-          activities.map((activity) => (
-            <article
-              key={activity.id}
-              className="flex gap-3 rounded-lg border border-border bg-background/55 p-4">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-accent">
-                <HugeiconsIcon
-                  icon={activity.type === "post" ? BloggerIcon : Task01Icon}
-                  strokeWidth={2}
-                />
-              </span>
-              <div className="min-w-0">
-                <h3 className="truncate text-sm font-semibold text-foreground">
-                  {activity.title}
-                </h3>
-                <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                  {activity.description}
-                </p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {activity.timestamp}
-                </p>
-              </div>
-            </article>
-          ))
+          activities.map((activity) =>
+            activity.type === "post" && activity.post ? (
+              <button
+                key={activity.id}
+                type="button"
+                onClick={() => {
+                  if (activity.post) {
+                    handleOpenPost(activity.post);
+                  }
+                }}
+                className="flex w-full gap-3 rounded-lg border border-border bg-background/55 p-4 text-left transition hover:border-ring/40 hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35">
+                <ActivityContent activity={activity} />
+              </button>
+            ) : (
+              <article
+                key={activity.id}
+                className="flex gap-3 rounded-lg border border-border bg-background/55 p-4">
+                <ActivityContent activity={activity} />
+              </article>
+            ),
+          )
         )}
       </div>
+
+      <BlogPostModal
+        key={postModalSession}
+        post={selectedPost}
+        open={isPostModalOpen}
+        onOpenChange={setIsPostModalOpen}
+      />
     </section>
   );
 }

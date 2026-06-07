@@ -4,35 +4,9 @@ import { getServerSession } from "next-auth";
 import { BlogManager } from "@/components/features/blog/blogManager";
 import { DashboardSidebar } from "@/components/layout/dashboardSidebar";
 import { authOptions } from "@/lib/auth";
-import { listPosts } from "@/services/postService";
-import type { BlogPostListItem } from "@/types/blog";
+import { listPosts, toBlogPostListItem } from "@/services/postService";
 
 export const dynamic = "force-dynamic";
-
-function formatPostDate(date: Date) {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
-}
-
-function toBlogPostListItem(post: Awaited<ReturnType<typeof listPosts>>[number]) {
-  return {
-    id: post.id,
-    title: post.title,
-    content: post.content ?? "",
-    images: post.postImages.map((postImage) => ({
-      id: postImage.id,
-      url: postImage.mediaAsset.url,
-      fileName: postImage.mediaAsset.fileName,
-      altText: postImage.altText ?? postImage.mediaAsset.alt ?? undefined,
-    })),
-    createdAt: formatPostDate(post.createdAt),
-    updatedAt: formatPostDate(post.updatedAt),
-  } satisfies BlogPostListItem;
-}
 
 export default async function BlogPage() {
   const session = await getServerSession(authOptions);

@@ -6,6 +6,7 @@ import type {
   updatePostSchema,
 } from "@/prisma/validation/schemaValidation";
 import { assertUserOwnsMediaAssets } from "@/services/mediaService";
+import type { BlogPostListItem } from "@/types/blog";
 
 type CreatePostInput = z.infer<typeof createPostSchema>;
 type UpdatePostInput = z.infer<typeof updatePostSchema>;
@@ -35,6 +36,33 @@ export function listPosts(authorId: string) {
     orderBy: { updatedAt: "desc" },
     select: postSelect,
   });
+}
+
+function formatPostDate(date: Date) {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+export function toBlogPostListItem(
+  post: Awaited<ReturnType<typeof listPosts>>[number],
+) {
+  return {
+    id: post.id,
+    title: post.title,
+    content: post.content ?? "",
+    images: post.postImages.map((postImage) => ({
+      id: postImage.id,
+      url: postImage.mediaAsset.url,
+      fileName: postImage.mediaAsset.fileName,
+      altText: postImage.altText ?? postImage.mediaAsset.alt ?? undefined,
+    })),
+    createdAt: formatPostDate(post.createdAt),
+    updatedAt: formatPostDate(post.updatedAt),
+  } satisfies BlogPostListItem;
 }
 
 export async function createPost(authorId: string, data: CreatePostInput) {

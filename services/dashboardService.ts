@@ -1,11 +1,16 @@
 import prisma from "@/prisma/client";
+import {
+  buildContributionCalendar,
+  getContributionLevel,
+  toContributionDateKey,
+} from "@/lib/contributions";
 import type {
-  DashboardActivityDay,
   DashboardActivityItem,
   DashboardStat,
   DashboardTaskPreview,
   DashboardViewModel,
 } from "@/types/dashboard";
+import { listPosts, toBlogPostListItem } from "@/services/postService";
 
 type SourceTask = {
   id: string;
@@ -18,13 +23,7 @@ type SourceTask = {
   dueDate?: Date | null;
 };
 
-type SourcePost = {
-  id: string;
-  title: string;
-  content: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
+type SourcePost = Awaited<ReturnType<typeof listPosts>>[number];
 
 const heatmapDays = 84;
 
@@ -33,10 +32,6 @@ function daysAgo(days: number) {
   date.setHours(12, 0, 0, 0);
   date.setDate(date.getDate() - days);
   return date;
-}
-
-function toDateKey(date: Date) {
-  return date.toISOString().slice(0, 10);
 }
 
 function formatDayLabel(date: Date) {
@@ -53,26 +48,6 @@ function formatTimeLabel(date: Date) {
     hour: "numeric",
     minute: "2-digit",
   }).format(date);
-}
-
-function getActivityLevel(count: number): DashboardActivityDay["level"] {
-  if (count === 0) {
-    return 0;
-  }
-
-  if (count === 1) {
-    return 1;
-  }
-
-  if (count === 2) {
-    return 2;
-  }
-
-  if (count <= 4) {
-    return 3;
-  }
-
-  return 4;
 }
 
 function getCompletionRate(tasks: SourceTask[]) {
@@ -137,33 +112,31 @@ function getStats(tasks: SourceTask[], now: Date): DashboardStat[] {
   ];
 }
 
+function getActivityDates(tasks: SourceTask[], posts: SourcePost[]) {
+  return [
+    ...tasks.flatMap((task) => [task.createdAt, task.updatedAt]),
+    ...posts.flatMap((post) => [post.createdAt, post.updatedAt]),
+  ];
+}
+
 function getActivityDays(tasks: SourceTask[], posts: SourcePost[]) {
   const countsByDay = new Map<string, number>();
 
   // Bucket task and post timestamps into day keys so Prisma rows can replace mock data without changing the UI.
-  for (const task of tasks) {
-    for (const date of [task.createdAt, task.updatedAt]) {
-      const dateKey = toDateKey(date);
-      countsByDay.set(dateKey, (countsByDay.get(dateKey) ?? 0) + 1);
-    }
-  }
-
-  for (const post of posts) {
-    for (const date of [post.createdAt, post.updatedAt]) {
-      const dateKey = toDateKey(date);
-      countsByDay.set(dateKey, (countsByDay.get(dateKey) ?? 0) + 1);
-    }
+  for (const date of getActivityDates(tasks, posts)) {
+    const dateKey = toContributionDateKey(date);
+    countsByDay.set(dateKey, (countsByDay.get(dateKey) ?? 0) + 1);
   }
 
   return Array.from({ length: heatmapDays }, (_, index) => {
     const date = daysAgo(heatmapDays - 1 - index);
-    const dateKey = toDateKey(date);
+    const dateKey = toContributionDateKey(date);
     const count = countsByDay.get(dateKey) ?? 0;
 
     return {
       date: dateKey,
       count,
-      level: getActivityLevel(count),
+      level: getContributionLevel(count),
     };
   });
 }
@@ -205,6 +178,7 @@ function getRecentActivities(
     description: post.content ?? "Blog post activity",
     type: "post" as const,
     timestamp: post.updatedAt,
+    post: toBlogPostListItem(post),
   }));
 
   return [...taskActivities, ...postActivities]
@@ -223,6 +197,7 @@ function buildDashboardViewModel(
   posts: SourcePost[],
 ): DashboardViewModel {
   const now = new Date();
+  const activityDates = getActivityDates(tasks, posts);
   const activityDays = getActivityDays(tasks, posts);
   const activeDays = activityDays.filter((day) => day.count > 0).length;
   const weeklyActivityCount = activityDays
@@ -239,6 +214,7 @@ function buildDashboardViewModel(
     },
     stats: getStats(tasks, now),
     activityDays,
+    activityCalendar: buildContributionCalendar(activityDates),
     upcomingTasks: getPreviewTasks(tasks, now),
     recentActivities: getRecentActivities(tasks, posts),
   };
@@ -270,20 +246,7 @@ export async function getDashboardViewModel(
           updatedAt: true,
         },
       }),
-      prisma.post.findMany({
-        where: {
-          authorId,
-          deletedAt: null,
-        },
-        orderBy: { updatedAt: "desc" },
-        select: {
-          id: true,
-          title: true,
-          content: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      }),
+      listPosts(authorId),
     ]);
 
     return buildDashboardViewModel(tasks, posts);

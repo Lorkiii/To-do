@@ -38,7 +38,7 @@ export default async function ActivityPage() {
         <ActivityStatCards stats={activity.stats} />
 
         <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-          <DashboardActivityHeatmap activityDays={activity.activityDays} />
+          <DashboardActivityHeatmap calendar={activity.activityCalendar} />
           <DashboardProgressSummary
             completionRate={activity.summary.completionRate}
             activeDays={activity.summary.activeDays}

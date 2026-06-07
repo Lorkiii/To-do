@@ -1,4 +1,9 @@
 import prisma from "@/prisma/client";
+import {
+  buildContributionCalendar,
+  getContributionLevel,
+  toContributionDateKey,
+} from "@/lib/contributions";
 import type {
   ActivityFeedGroup,
   ActivityFeedItem,
@@ -45,7 +50,7 @@ function startOfDay(date: Date) {
 }
 
 function toDateKey(date: Date) {
-  return startOfDay(date).toLocaleDateString("en-CA");
+  return toContributionDateKey(startOfDay(date));
 }
 
 function formatTime(date: Date) {
@@ -84,14 +89,6 @@ function formatGroupLabel(date: Date) {
     month: "short",
     day: "numeric",
   }).format(date);
-}
-
-function getActivityLevel(count: number): DashboardActivityDay["level"] {
-  if (count === 0) return 0;
-  if (count === 1) return 1;
-  if (count === 2) return 2;
-  if (count <= 4) return 3;
-  return 4;
 }
 
 function isCompletedStatus(status: string) {
@@ -156,11 +153,18 @@ function buildRawActivities(
   );
 }
 
-function getActivityDays(activities: RawActivity[]): DashboardActivityDay[] {
+function getActivityDates(tasks: SourceTask[], posts: SourcePost[]) {
+  return [
+    ...tasks.flatMap((task) => [task.createdAt, task.updatedAt]),
+    ...posts.flatMap((post) => [post.createdAt, post.updatedAt]),
+  ];
+}
+
+function getActivityDays(activityDates: Date[]): DashboardActivityDay[] {
   const countsByDay = new Map<string, number>();
 
-  for (const activity of activities) {
-    const key = toDateKey(activity.timestamp);
+  for (const activityDate of activityDates) {
+    const key = toDateKey(activityDate);
     countsByDay.set(key, (countsByDay.get(key) ?? 0) + 1);
   }
 
@@ -172,7 +176,7 @@ function getActivityDays(activities: RawActivity[]): DashboardActivityDay[] {
     const key = toDateKey(date);
     const count = countsByDay.get(key) ?? 0;
 
-    return { date: key, count, level: getActivityLevel(count) };
+    return { date: key, count, level: getContributionLevel(count) };
   });
 }
 
@@ -233,7 +237,8 @@ function buildActivityViewModel(
   posts: SourcePost[],
 ): ActivityViewModel {
   const activities = buildRawActivities(tasks, posts);
-  const activityDays = getActivityDays(activities);
+  const activityDates = getActivityDates(tasks, posts);
+  const activityDays = getActivityDays(activityDates);
   const activeDays = activityDays.filter((day) => day.count > 0).length;
   const weeklyActivityCount = activityDays
     .slice(-7)
@@ -271,6 +276,7 @@ function buildActivityViewModel(
     generatedAt: formatTimeLabel(new Date()),
     stats,
     activityDays,
+    activityCalendar: buildContributionCalendar(activityDates),
     summary: {
       completionRate: getCompletionRate(tasks),
       activeDays,
