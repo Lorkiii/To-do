@@ -19,7 +19,7 @@ export function FloatingActionButton({
       aria-label={label}
       size="icon-lg"
       className={cn(
-        "fixed bottom-5 right-5 z-50 size-14 rounded-full bg-primary text-2xl text-primary-foreground shadow-xl transition hover:bg-primary/90 md:bottom-8 md:right-8",
+        "fixed bottom-28 right-4 z-50 size-14 rounded-full bg-primary text-2xl text-primary-foreground shadow-xl transition hover:bg-primary/90 md:bottom-8 md:right-8",
         className,
       )}
     >

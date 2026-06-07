@@ -20,6 +20,8 @@ type ImageUploadFieldProps = {
   onUploadingChange?: (isUploading: boolean) => void;
 };
 
+const imageUploadUrl = "/api/uploads/images";
+
 function getImageDimensions(file: File) {
   return new Promise<{ width: number; height: number }>((resolve, reject) => {
     const objectUrl = URL.createObjectURL(file);
@@ -65,6 +67,20 @@ function validateFile(file: File) {
   return null;
 }
 
+async function assertImageUploadIsReady() {
+  const response = await fetch(imageUploadUrl);
+
+  if (response.ok) {
+    return;
+  }
+
+  const body = (await response.json().catch(() => null)) as {
+    error?: string;
+  } | null;
+
+  throw new Error(body?.error ?? "Image upload service is unavailable.");
+}
+
 export function ImageUploadField({
   value,
   onChange,
@@ -97,6 +113,9 @@ export function ImageUploadField({
     onUploadingChange?.(true);
 
     try {
+      // Check server configuration first because the Blob SDK hides token endpoint errors.
+      await assertImageUploadIsReady();
+
       const uploadedImages: UploadedImage[] = [];
 
       for (const file of selectedFiles) {
@@ -114,7 +133,7 @@ export function ImageUploadField({
         // The browser sends the file to Blob while the API route only grants restricted access.
         const blob = await upload(pathname, file, {
           access: "public",
-          handleUploadUrl: "/api/uploads/images",
+          handleUploadUrl: imageUploadUrl,
           clientPayload: JSON.stringify({
             mediaAssetId,
             fileName: file.name,

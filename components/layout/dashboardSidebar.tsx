@@ -38,7 +38,7 @@ const dashboardNavItems: DashboardNavItem[] = [
   {
     id: "activity",
     label: "Activity",
-    href: "/dashboard#activity",
+    href: "/dashboard/activity",
     icon: Calendar03Icon,
   },
   {

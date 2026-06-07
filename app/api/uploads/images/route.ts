@@ -28,10 +28,42 @@ function getFileType(fileName: string) {
   const extension = fileName.split(".").pop()?.trim().toLowerCase();
   return extension || "unknown";
 }
+
+function isBlobStorageConfigured() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
+}
+
+export async function GET() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!isBlobStorageConfigured()) {
+    return NextResponse.json(
+      { error: "Image uploads are not configured." },
+      { status: 503 },
+    );
+  }
+
+  return NextResponse.json({ configured: true });
+}
+
 // HANDLE THE IMAGE UPLOAD
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   const ownerId = session?.user?.id;
+
+  if (!isBlobStorageConfigured()) {
+    console.error(
+      "Image upload is unavailable because BLOB_READ_WRITE_TOKEN is missing.",
+    );
+    return NextResponse.json(
+      { error: "Image uploads are not configured." },
+      { status: 503 },
+    );
+  }
 
   let body: HandleUploadBody;
   try {

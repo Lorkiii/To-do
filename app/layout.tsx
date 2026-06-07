@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-
+import { Providers } from "@/app/providers";
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -42,7 +42,10 @@ export default function RootLayout({
         "font-sans",
         dmSans.variable,
       )}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {/* Client-side authentication hooks require the shared session context. */}
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

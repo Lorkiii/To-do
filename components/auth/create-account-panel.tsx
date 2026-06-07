@@ -211,8 +211,8 @@ export function CreateAccountPanel() {
             </Button>
           </header>
 
-          <div className="grid flex-1 items-center gap-8 py-12 lg:grid-cols-[0.9fr_0.75fr] lg:py-16">
-            <div className="max-w-2xl">
+          <div className="grid flex-1 items-start gap-8 py-6 lg:grid-cols-[0.9fr_0.75fr] lg:items-center lg:py-16">
+            <div className="order-2 max-w-2xl lg:order-1">
               <p className="inline-flex rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.28em] text-accent">
                 Create workspace
               </p>
@@ -265,7 +265,7 @@ export function CreateAccountPanel() {
             </div>
 
             <div
-              className="rounded-[2rem] border border-border bg-card/70 p-3 shadow-2xl backdrop-blur-xl"
+              className="order-1 rounded-[2rem] border border-border bg-card/70 p-3 shadow-2xl backdrop-blur-xl lg:order-2"
               aria-label="Create account">
               <div className="rounded-[1.5rem] border border-border bg-background/80 p-6 sm:p-8">
                 <div>

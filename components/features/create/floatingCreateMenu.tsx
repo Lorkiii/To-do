@@ -25,7 +25,7 @@ export function FloatingCreateMenu() {
           <Button
             aria-label="Create new item"
             size="icon-lg"
-            className="fixed bottom-5 right-5 z-50 size-14 rounded-full bg-primary text-primary-foreground shadow-xl transition hover:bg-primary/90 md:bottom-8 md:right-8"
+            className="fixed bottom-28 right-4 z-50 size-14 rounded-full bg-primary text-primary-foreground shadow-xl transition hover:bg-primary/90 md:bottom-8 md:right-8"
           >
             <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-6" />
           </Button>

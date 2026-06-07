@@ -1,8 +1,5 @@
-import {
-  BloggerIcon,
-  Task01Icon,
-  TimeScheduleIcon,
-} from "@hugeicons/core-free-icons";
+import Link from "next/link";
+import { BloggerIcon, Task01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import { cn } from "@/lib/utils";
@@ -102,9 +99,11 @@ export function DashboardRecentActivity({
             Latest movement
           </h2>
         </div>
-        <span className="flex size-9 items-center justify-center rounded-lg border border-border bg-background/55 text-muted-foreground">
-          <HugeiconsIcon icon={TimeScheduleIcon} strokeWidth={2} />
-        </span>
+        <Link
+          href="/dashboard/activity"
+          className="text-xs font-medium text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35">
+          View all
+        </Link>
       </div>
 
       <div className="mt-5 space-y-3">

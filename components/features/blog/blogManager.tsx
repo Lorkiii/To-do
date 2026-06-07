@@ -9,6 +9,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Button } from "@/components/ui/button";
 import { ImageUploadField } from "@/components/features/uploads/imageUploadField";
+import { BlogPostModal } from "@/components/features/blog/blogPostModal";
 import type { BlogPostListItem } from "@/types/blog";
 import type { UploadedImage } from "@/types/media";
 
@@ -46,6 +47,17 @@ export function BlogManager({ posts }: BlogManagerProps) {
   const [error, setError] = useState("");
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<BlogPostListItem | null>(
+    null,
+  );
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [postModalSession, setPostModalSession] = useState(0);
+
+  function handleOpenPost(post: BlogPostListItem) {
+    setSelectedPost(post);
+    setPostModalSession((current) => current + 1);
+    setIsPostModalOpen(true);
+  }
 
   function handleFieldChange(
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -197,12 +209,14 @@ export function BlogManager({ posts }: BlogManagerProps) {
             </p>
           ) : (
             posts.map((post) => (
-              <article
+              <button
                 key={post.id}
-                className="rounded-lg border border-border bg-background/55 p-4">
+                type="button"
+                onClick={() => handleOpenPost(post)}
+                className="w-full rounded-lg border border-border bg-background/55 p-4 text-left transition hover:border-ring/40 hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-semibold text-foreground">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-sm font-semibold text-foreground">
                       {post.title}
                     </h3>
                     <p className="mt-2 line-clamp-4 text-sm leading-6 text-muted-foreground">
@@ -228,17 +242,27 @@ export function BlogManager({ posts }: BlogManagerProps) {
                       </div>
                     )}
                   </div>
+                  <span className="shrink-0 rounded-full border border-border bg-card px-2 py-1 text-[0.68rem] font-medium text-muted-foreground">
+                    View
+                  </span>
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <span>Updated {post.updatedAt}</span>
                   <span className="size-1 rounded-full bg-muted-foreground/40" />
                   <span>Created {post.createdAt}</span>
                 </div>
-              </article>
+              </button>
             ))
           )}
         </div>
       </section>
+
+      <BlogPostModal
+        key={postModalSession}
+        post={selectedPost}
+        open={isPostModalOpen}
+        onOpenChange={setIsPostModalOpen}
+      />
     </div>
   );
 }
