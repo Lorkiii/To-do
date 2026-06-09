@@ -6,7 +6,6 @@ import {
   BloggerIcon,
   BookOpenTextIcon,
   Calendar03Icon,
-  DashboardSquare01Icon,
   Home03Icon,
   Setting07Icon,
   Task01Icon,
@@ -15,6 +14,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
 
 import { cn } from "@/lib/utils";
+import { SidebarThemeToggle } from "@/components/layout/sidebarThemeToggle";
 
 type DashboardNavItem = {
   id: "dashboard" | "tasks" | "activity" | "templates" | "blog" | "settings";
@@ -50,7 +50,7 @@ const dashboardNavItems: DashboardNavItem[] = [
   {
     id: "settings",
     label: "Settings",
-    href: "/dashboard#settings",
+    href: "/dashboard/settings",
     icon: Setting07Icon,
   },
 ];
@@ -215,16 +215,12 @@ export function DashboardSidebar({
           ))}
         </nav>
 
-        <div className="rounded-xl border border-border bg-background/55 p-4">
-          <div className="flex items-center gap-3">
-            <span className="flex size-9 items-center justify-center rounded-lg border border-border bg-card text-accent">
-              <HugeiconsIcon icon={DashboardSquare01Icon} strokeWidth={2} />
-            </span>
-            <div>
-              <p className="text-sm font-medium text-foreground">Backend ready</p>
-              <p className="text-xs text-muted-foreground">Service driven UI</p>
-            </div>
+        <div className="flex items-center justify-between rounded-xl border border-border bg-background/55 p-3">
+          <div>
+            <p className="text-sm font-medium text-foreground">Appearance</p>
+            <p className="text-xs text-muted-foreground">Light or dark mode</p>
           </div>
+          <SidebarThemeToggle />
         </div>
       </aside>
 
@@ -256,6 +252,7 @@ export function DashboardSidebar({
               isMobile
             />
           ))}
+          <SidebarThemeToggle isMobile />
         </div>
       </nav>
     </div>

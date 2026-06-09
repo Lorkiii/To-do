@@ -56,19 +56,6 @@ export default async function DashboardPage() {
           <DashboardRecentActivity activities={dashboard.recentActivities} />
         </div>
 
-        <section
-          id="settings"
-          className="rounded-xl border border-border bg-card/70 p-5 shadow-sm">
-          <p className="text-sm font-medium text-accent">Settings</p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-foreground">
-            Dashboard preferences
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            This section is reserved for theme, notification, and task view
-            preferences when those backend settings are available.
-          </p>
-        </section>
-
         <FloatingCreateMenu />
         
       </div>

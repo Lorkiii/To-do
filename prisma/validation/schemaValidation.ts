@@ -7,6 +7,7 @@ import {
   usernamePattern,
   validationRules,
 } from "./validationRules";
+import { themes } from "@/types/settings";
 
 type EnumValues = readonly [string, ...string[]];
 type TextRule = {
@@ -248,3 +249,61 @@ export const updatePostSchema = z.object(postFields).partial();
 export const userSchema = z.object(accountFieldSchemas);
 
 export const loginSchema = z.object(loginFieldSchemas);
+
+const usernameSettingsSchema = accountFieldSchemas.username
+  .transform((value) => value.toLowerCase());
+
+const birthDateSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Birth date must use YYYY-MM-DD")
+  .refine((value) => {
+    const date = new Date(`${value}T00:00:00.000Z`);
+    return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
+  }, "Birth date must be a valid date")
+  .refine(
+    (value) => new Date(`${value}T00:00:00.000Z`) <= new Date(),
+    "Birth date cannot be in the future",
+  );
+
+export const updateProfileSettingsSchema = z
+  .object({
+    username: usernameSettingsSchema.optional(),
+    birthDate: birthDateSchema.nullable().optional(),
+  })
+  .strict()
+  .refine(
+    (value) => value.username !== undefined || value.birthDate !== undefined,
+    "At least one profile field is required",
+  );
+
+export const updatePasswordSettingsSchema = z
+  .object({
+    currentPassword: requiredText({ label: "Current password" }),
+    newPassword: requiredText({
+      label: "New password",
+      minLength: validationRules.user.password.minLength,
+    }),
+    confirmPassword: requiredText({ label: "Confirm password" }),
+  })
+  .strict()
+  .refine((value) => value.newPassword === value.confirmPassword, {
+    message: "New passwords do not match",
+    path: ["confirmPassword"],
+  })
+  .refine((value) => value.currentPassword !== value.newPassword, {
+    message: "New password must be different from the current password",
+    path: ["newPassword"],
+  });
+
+export const updateSystemSettingsSchema = z
+  .object({
+    notificationsEnabled: z.boolean().optional(),
+    theme: z.enum(themes).optional(),
+  })
+  .strict()
+  .refine(
+    (value) =>
+      value.notificationsEnabled !== undefined || value.theme !== undefined,
+    "At least one system setting is required",
+  );

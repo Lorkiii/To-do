@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Providers } from "@/app/providers";
+import { cookies } from "next/headers";
+import type { Theme } from "@/types/settings";
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -25,17 +27,23 @@ export const metadata: Metadata = {
 };
 
 // root layout
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const initialTheme: Theme =
+    cookieStore.get("theme")?.value === "light" ? "light" : "dark";
+
   // return the html element with the geistSans and geistMono fonts and the body element with the children
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={cn(
         "h-full",
+        initialTheme === "dark" && "dark",
         "antialiased",
         geistSans.variable,
         geistMono.variable,
@@ -44,7 +52,7 @@ export default function RootLayout({
       )}>
       <body className="min-h-full flex flex-col">
         {/* Client-side authentication hooks require the shared session context. */}
-        <Providers>{children}</Providers>
+        <Providers initialTheme={initialTheme}>{children}</Providers>
       </body>
     </html>
   );

@@ -11,6 +11,11 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { buildContributionWeeks } from "@/lib/contributions";
 import { cn } from "@/lib/utils";
 import type {
@@ -94,19 +99,19 @@ function ContributionCell({ day }: { day: ContributionDay | null }) {
   }
 
   return (
-    <span className="group relative block size-3">
-      <span
-        aria-label={day.label}
-        tabIndex={0}
-        className={cn(
-          "block size-3 rounded-[3px] border border-border/40 transition hover:ring-2 hover:ring-ring/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
-          levelClassMap[day.level],
-        )}
-      />
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-max max-w-52 -translate-x-1/2 rounded-md bg-foreground px-2.5 py-1.5 text-xs font-medium text-background shadow-md group-hover:block group-focus-within:block">
-        {day.label}
-      </span>
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          aria-label={day.label}
+          tabIndex={0}
+          className={cn(
+            "block size-3 rounded-[3px] border border-border/40 transition hover:ring-2 hover:ring-ring/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
+            levelClassMap[day.level],
+          )}
+        />
+      </TooltipTrigger>
+      <TooltipContent>{day.label}</TooltipContent>
+    </Tooltip>
   );
 }
 
